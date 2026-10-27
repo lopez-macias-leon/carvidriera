@@ -1,0 +1,142 @@
+@import "tailwindcss";
+
+/* Paleta: azul profundo (confianza) sobre blancos fríos; verde reservado para WhatsApp
+   y ámbar solo para "Destacado". Todos los pares texto/fondo cumplen contraste WCAG AA. */
+@theme {
+  --color-bg: #f5f7fa;
+  --color-surface: #ffffff;
+  --color-line: #e1e6ee;
+  --color-soft: #eaf0f8;
+  --color-ink: #0e1726;
+  --color-muted: #4f5d70;
+  --color-brand: #0b3b75;
+  --color-brand-dark: #082a55;
+  --color-brand-light: #dbe7f6;
+  --color-gold: #92400e;
+  --color-gold-bg: #fdf0d5;
+  --color-ok: #1d6b3a;
+  --color-ok-bg: #e3f4e8;
+  --color-warn: #8a4b00;
+  --color-warn-bg: #fff1dc;
+  --color-danger: #b42318;
+  --color-wa: #0f7a40;
+  --color-wa-dark: #0b6534;
+
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Filas deslizables sin barra visible en celular. */
+.scroll-row {
+  scrollbar-width: none;
+  scroll-snap-type: x mandatory;
+}
+.scroll-row::-webkit-scrollbar {
+  display: none;
+}
+.scroll-row > * {
+  scroll-snap-align: start;
+}
+
+/* Inputs de 16px como mínimo: evita el zoom automático en iPhone. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}
+
+@layer components {
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  border-radius: 0.75rem;
+  padding: 0 1.1rem;
+  font-weight: 700;
+  transition: background-color 0.15s;
+}
+.btn-brand {
+  background: var(--color-brand);
+  color: #fff;
+}
+.btn-brand:hover {
+  background: var(--color-brand-dark);
+}
+.btn-wa {
+  background: var(--color-wa);
+  color: #fff;
+}
+.btn-wa:hover {
+  background: var(--color-wa-dark);
+}
+.btn-ghost {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+}
+.btn-ghost:hover {
+  background: var(--color-soft);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 40px;
+  border-radius: 999px;
+  border: 1px solid var(--color-line);
+  background: var(--color-surface);
+  padding: 0 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.chip[aria-pressed="true"],
+.chip[aria-checked="true"],
+.chip-on {
+  border-color: var(--color-brand);
+  background: var(--color-brand);
+  color: #fff;
+}
+
+.field {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 0.75rem;
+  border: 1px solid #c5cedb;
+  background: var(--color-surface);
+  padding: 0.6rem 0.85rem;
+}
+.field:focus {
+  outline: 3px solid var(--color-brand-light);
+  border-color: var(--color-brand);
+}
+}

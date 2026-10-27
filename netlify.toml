@@ -1,0 +1,12 @@
+# Configuración de publicación en Netlify (Next.js).
+# El adaptador de Next.js de Netlify convierte la compilación en funciones del servidor;
+# sin él, Netlify sirve los archivos como una página estática y las rutas dan 404.
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
