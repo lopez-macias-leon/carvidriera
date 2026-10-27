@@ -48,7 +48,7 @@ export default function CatalogoPanel() {
       </section>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <section className="rounded-2xl border border-line bg-surface p-4">
+        <section className="min-w-0 rounded-2xl border border-line bg-surface p-4">
           <h2 className="flex items-center gap-2 font-bold">
             <QrIcon className="size-5 text-brand" /> Código QR
           </h2>
@@ -62,7 +62,7 @@ export default function CatalogoPanel() {
           </button>
         </section>
 
-        <section className="rounded-2xl border border-line bg-surface p-4">
+        <section className="min-w-0 rounded-2xl border border-line bg-surface p-4">
           <h2 className="font-bold">Así se ve al compartirlo</h2>
           <p className="mt-1 text-sm text-muted">Vista previa en WhatsApp.</p>
           <div className="mt-4 rounded-2xl bg-[#e7ddd3] p-3">
