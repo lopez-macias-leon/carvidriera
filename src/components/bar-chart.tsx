@@ -75,7 +75,9 @@ export function BarChart({ datos, titulo, unidad }: { datos: Punto[]; titulo: st
           </div>
         )}
       </div>
-      <table className="sr-only">
+      {/* Las tablas no respetan el ancho de 1px de sr-only: se oculta el contenedor. */}
+      <div className="sr-only">
+      <table>
         <caption>{titulo}</caption>
         <thead>
           <tr>
@@ -92,6 +94,7 @@ export function BarChart({ datos, titulo, unidad }: { datos: Punto[]; titulo: st
           ))}
         </tbody>
       </table>
+      </div>
     </figure>
   );
 }
