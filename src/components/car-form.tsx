@@ -104,7 +104,7 @@ function aVehiculo(d: Datos, base?: Vehiculo, estado: Vehiculo["estado"] = "publ
     condicion: d.condicion,
     marca: d.marca,
     modelo: d.modelo,
-    version: d.version.trim() || "—",
+    version: d.version.trim(),
     anio: Number(d.anio) || 2026,
     km,
     combustible: (d.combustible || "nafta") as Combustible,

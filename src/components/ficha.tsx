@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatKm, formatPrecio, labelCaja, labelCombustible, labelTipo, localidadCorta, nombreLocalidad, tituloVehiculo } from "@/lib/format";
+import { formatKm, formatPrecio, labelCaja, labelCombustible, labelTipo, localidadCorta, nombreLocalidad, tituloCompleto, tituloVehiculo } from "@/lib/format";
 import type { Agencia, Vehiculo } from "@/lib/types";
 import { AgencyAvatar } from "./agency-avatar";
 import { CarCard, CarGrid, EstadoBadge } from "./car-card";
@@ -33,7 +33,7 @@ export function Ficha({
   masDeLaAgencia: Vehiculo[];
   desdeCatalogo: boolean;
 }) {
-  const titulo = `${tituloVehiculo(v)} ${v.version} ${v.anio}`;
+  const titulo = tituloCompleto(v);
   const disponible = v.estado === "publicado" || v.estado === "reservado";
   const agencias = { [agencia.slug]: agencia };
   const otros = desdeCatalogo ? [masDeLaAgencia, similares] : [similares, masDeLaAgencia];
@@ -74,9 +74,7 @@ export function Ficha({
         <div className="mt-4 lg:mt-0">
           <div className="lg:sticky lg:top-20">
             <h1 className="text-2xl font-extrabold leading-tight tracking-tight">{tituloVehiculo(v)}</h1>
-            <p className="text-muted">
-              {v.version} · {v.anio}
-            </p>
+            <p className="text-muted">{[v.version, v.anio].filter(Boolean).join(" · ")}</p>
             <p className={`mt-2 text-3xl font-extrabold tracking-tight ${v.precio === null ? "text-brand" : ""}`}>{formatPrecio(v.precio, v.moneda)}</p>
             <p className="mt-1 flex items-center gap-1 text-sm text-muted">
               <PinIcon className="size-4" /> {nombreLocalidad(v.localidad)}

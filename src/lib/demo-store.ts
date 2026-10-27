@@ -19,8 +19,26 @@ function abrir(): Promise<IDBDatabase> {
   });
 }
 
+/** Si el navegador bloquea IndexedDB (ventana privada, vista embebida), los datos viven en memoria hasta recargar. */
+const memoria = new Map<string, { codigo: string }>();
+const memoriaStore = {
+  getAll: () => [...memoria.values()],
+  get: (k: string) => memoria.get(k),
+  put: (v: { codigo: string }) => void memoria.set(v.codigo, v),
+  delete: (k: string) => void memoria.delete(k),
+};
+
 async function tx<T>(modo: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-  const db = await abrir();
+  let db: IDBDatabase;
+  try {
+    db = await abrir();
+  } catch {
+    // Mismo uso que un IDBObjectStore, resuelto en el momento.
+    const fake = new Proxy({} as IDBObjectStore, {
+      get: (_, prop: keyof typeof memoriaStore) => (...args: never[]) => ({ result: (memoriaStore[prop] as (...a: never[]) => unknown)(...args) }),
+    });
+    return (fn(fake) as unknown as { result: T }).result;
+  }
   return new Promise((resolve, reject) => {
     const req = fn(db.transaction(STORE, modo).objectStore(STORE));
     req.onsuccess = () => resolve(req.result);

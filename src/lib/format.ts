@@ -20,7 +20,7 @@ export const localidadCorta = (slug: string) => (slug === "capital" ? "Catamarca
 
 export const tituloVehiculo = (v: Pick<Vehiculo, "marca" | "modelo">) => `${v.marca} ${v.modelo}`;
 export const tituloCompleto = (v: Pick<Vehiculo, "marca" | "modelo" | "version" | "anio">) =>
-  `${v.marca} ${v.modelo} ${v.version} ${v.anio}`;
+  [v.marca, v.modelo, v.version, v.anio].filter(Boolean).join(" ");
 
 const DIAS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 

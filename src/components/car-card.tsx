@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatKm, formatPrecio, labelCombustible, labelCaja, localidadCorta, tituloVehiculo } from "@/lib/format";
+import { formatKm, formatPrecio, labelCombustible, labelCaja, localidadCorta, tituloCompleto, tituloVehiculo } from "@/lib/format";
 import type { Agencia, Vehiculo } from "@/lib/types";
 import { FavoriteButton } from "./favorite-button";
 import { PinIcon, VerifiedIcon } from "./icons";
@@ -33,7 +33,7 @@ export function CarCard({
   return (
     <article className="group relative flex flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(14,23,38,0.04)] transition hover:shadow-md">
       <div className="relative aspect-[4/3] bg-soft">
-        <VehiculoFoto v={v} eager={eager} alt={`${titulo} ${v.version} ${v.anio}`} className="absolute inset-0 size-full" />
+        <VehiculoFoto v={v} eager={eager} alt={tituloCompleto(v)} className="absolute inset-0 size-full" />
         <div className="absolute left-2.5 top-2.5">
           <EstadoBadge v={v} />
         </div>
