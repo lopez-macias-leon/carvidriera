@@ -3,6 +3,8 @@
 Portal de compraventa de autos usados y 0 km, exclusivo para agencias y concesionarias de Catamarca.
 Documento de planificación: **no hay código todavía**. Una vez aprobado, se avanza sección por sección.
 
+> **Versión 2:** ahora también publican particulares (gratis, hasta 2 autos) y hay apartados de concesionarias y de mecánicos. Lo que cambia sobre públicos, navegación, cobros y modelo de datos está en [MODELO-V2.md](MODELO-V2.md), que tiene prioridad sobre este documento.
+
 Convenciones del documento:
 
 - Todo lo que está entre corchetes (`[NOMBRE DEL PORTAL]`, `[PRECIO]`, `[DÍAS DE GRACIA]`…) es un marcador para reemplazar por el dato real.
@@ -757,6 +759,8 @@ Lo mínimo para mostrar en 10 minutos desde el celular:
 | Nombre | CarVidriera |
 | Verificación de agencias | CUIT |
 | Términos y privacidad | Borrador en [`LEGALES-BORRADOR.md`](LEGALES-BORRADOR.md) |
+| Particulares (versión 2) | Publican gratis, hasta 2 autos a la vez, con mejoras pagas |
+| Mecánicos (versión 2) | Apartado de talleres con suscripción mensual |
 
 ### Dirección visual (propuesta)
 

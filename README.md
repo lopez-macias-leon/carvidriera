@@ -58,6 +58,7 @@ npm run prueba        # en otra terminal; usa el Playwright instalado en el sist
 
 ## Documentos
 
+- [docs/MODELO-V2.md](docs/MODELO-V2.md): versión 2 con particulares, concesionarias y mecánicos, y cómo gana plata el portal.
 - [docs/PROPUESTA.md](docs/PROPUESTA.md): planificación completa (sitemap, arquitectura, modelo de datos, seguridad, cobros, métricas, SEO y etapas).
 - [docs/LEGALES-BORRADOR.md](docs/LEGALES-BORRADOR.md): términos, condiciones para agencias y privacidad (para revisión profesional).
 - [docs/GUION-DEMO.md](docs/GUION-DEMO.md): cómo mostrar el portal a una agencia en 10 minutos.
