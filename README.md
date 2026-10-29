@@ -1,8 +1,8 @@
 # CarVidriera
 
-Portal de autos usados y 0 km de agencias y concesionarias de Catamarca.
-Los compradores buscan gratis y sin registrarse y consultan a la agencia por WhatsApp.
-Las agencias pagan una suscripción mensual por publicar su stock, tener su catálogo propio y ver estadísticas.
+Portal de autos usados y 0 km de Catamarca, con concesionarias, particulares y mecánicos.
+Los compradores buscan gratis y sin registrarse y consultan al vendedor por WhatsApp.
+Los particulares publican gratis (hasta 2 autos) y pueden pagar mejoras; las concesionarias y los talleres pagan una suscripción mensual.
 
 Hecho con [Next.js](https://nextjs.org) y Tailwind CSS, pensado primero para celular e instalable como app (PWA).
 
@@ -25,10 +25,20 @@ npm run build && npm start   # versión de producción
 - Listado `/autos` con filtros (tipo, condición, marca, modelo, precio en pesos o dólares, año, km, combustible, caja, localidad, agencia, permuta, financiación) y orden. Todo queda en la URL para compartir.
 - Ficha `/auto/[slug]` con galería, datos, documentación informada por la agencia, consulta por WhatsApp con el auto y el link ya escritos, compartir, favoritos, denunciar y autos similares.
 - Catálogo propio de cada agencia `/agencia/[slug]` con WhatsApp, cómo llegar, horarios con "Abierto ahora", mapa y stock con filtros.
-- Agencias, Para agencias (planes y preguntas), favoritos, consejos de compra, preguntas frecuentes, contacto, términos, condiciones para agencias y privacidad (borradores).
+- Concesionarias y Para concesionarias (planes, preguntas y diferencias con publicar como particular), favoritos, consejos de compra, preguntas frecuentes, contacto, términos, condiciones para agencias y privacidad (borradores).
 - Vista previa al compartir por WhatsApp (imagen con foto, precio y datos), sitemap, robots y datos estructurados.
 
-**Panel de agencia** (`/panel`, demo sin login)
+**Particulares** (`/publicar` y `/mi-cuenta`, demo sin login)
+- Publican gratis con el mismo asistente de carga (hasta 8 fotos), con tope de 2 autos publicados a la vez.
+- Mis avisos: vistas y consultas, vencimiento a los 60 días y renovación, reservar, pausar, "Lo vendí" y editar.
+- Destacar: elegir una mejora (destacado 7 días, subir al principio, aviso completo) y pagar con Mercado Pago, simulado en la demo.
+- Filtro "Concesionarias / Particulares" en el listado y ficha con datos del vendedor particular y consejos de seguridad.
+
+**Mecánicos** (`/mecanicos`, `/mecanico/[slug]`, `/para-talleres`)
+- Talleres con filtros por especialidad y localidad, ficha con WhatsApp, horarios y cómo llegar.
+- En cada ficha de auto usado, talleres que hacen revisión precompra.
+
+**Panel de concesionaria** (`/panel`, demo sin login)
 - Inicio con el resumen del mes, gráfico de vistas por día, autos más vistos y plan vigente.
 - Mis autos: estados (publicado, reservado, pausado, vendido, borrador), vistas y consultas por auto, duplicar y editar.
 - Cargar auto en 4 pasos desde el celular: fotos comprimidas a WebP en el teléfono (sin datos de ubicación), datos con un toque, precio y detalles, revisar y publicar. Guarda borrador automático.
@@ -39,9 +49,9 @@ npm run build && npm start   # versión de producción
 | Qué | Archivo |
 |---|---|
 | Nombre, dominio, WhatsApp y email del portal, modo demo | `src/config/portal.ts` |
-| Planes y precios | `src/config/planes.ts` |
+| Planes, mejoras para particulares, plan de talleres y tope de autos | `src/config/planes.ts` |
 | Marcas, modelos, localidades, colores | `src/data/catalogos.ts` |
-| Agencias y autos de demostración | `src/data/demo.ts` |
+| Concesionarias, particulares, autos y talleres de demostración | `src/data/demo.ts` |
 | Colores y estilos | `src/app/globals.css` |
 | Textos legales | `src/content/legales.ts` (sale de `docs/LEGALES-BORRADOR.md`) |
 

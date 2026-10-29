@@ -10,7 +10,7 @@ export function Footer() {
         <div>
           <Logo />
           <p className="mt-3 text-sm text-muted">
-            {portal.tagline}. Buscá gratis, sin registrarte, y consultá directo con la agencia por WhatsApp.
+            Autos de concesionarias y particulares de Catamarca. Buscá gratis, sin registrarte, y consultá directo por WhatsApp.
           </p>
         </div>
         <div>
@@ -45,8 +45,11 @@ export function Footer() {
         <div>
           <h2 className="text-sm font-bold">{portal.name}</h2>
           <ul className="mt-3 space-y-2 text-sm text-muted">
-            <li><Link href="/agencias" className="hover:text-brand hover:underline">Agencias</Link></li>
-            <li><Link href="/para-agencias" className="hover:text-brand hover:underline">Para agencias</Link></li>
+            <li><Link href="/concesionarias" className="hover:text-brand hover:underline">Concesionarias</Link></li>
+            <li><Link href="/mecanicos" className="hover:text-brand hover:underline">Mecánicos</Link></li>
+            <li><Link href="/publicar" className="hover:text-brand hover:underline">Publicá gratis</Link></li>
+            <li><Link href="/para-concesionarias" className="hover:text-brand hover:underline">Para concesionarias</Link></li>
+            <li><Link href="/para-talleres" className="hover:text-brand hover:underline">Para talleres</Link></li>
             <li><Link href="/consejos-de-compra" className="hover:text-brand hover:underline">Consejos de compra segura</Link></li>
             <li><Link href="/preguntas-frecuentes" className="hover:text-brand hover:underline">Preguntas frecuentes</Link></li>
             <li><Link href="/contacto" className="hover:text-brand hover:underline">Contacto</Link></li>
@@ -57,7 +60,7 @@ export function Footer() {
       </div>
       <div className="border-t border-line">
         <p className="mx-auto max-w-6xl px-4 py-4 text-xs text-muted">
-          {portal.name} es una vidriera de agencias: no vende vehículos ni procesa pagos. La información de cada aviso la publica la agencia.
+          {portal.name} no vende vehículos ni procesa el pago de los autos. La información de cada aviso la publica la concesionaria o el particular que vende.
         </p>
       </div>
     </footer>

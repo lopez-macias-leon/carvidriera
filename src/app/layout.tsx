@@ -12,11 +12,11 @@ const manrope = Manrope({
 export const metadata: Metadata = {
   metadataBase: portal.siteUrl.includes("[") ? undefined : new URL(portal.siteUrl),
   title: {
-    default: `${portal.name} | Autos usados y 0 km de agencias de Catamarca`,
+    default: `${portal.name} | Autos usados y 0 km en Catamarca`,
     template: `%s | ${portal.name}`,
   },
   description:
-    "Autos usados y 0 km de agencias verificadas de Catamarca. Buscá gratis, sin registrarte, y consultá directo con la agencia por WhatsApp.",
+    "Autos usados y 0 km de concesionarias y particulares de Catamarca, y mecánicos de confianza. Buscá gratis y consultá directo por WhatsApp. Vendé tu auto gratis.",
   applicationName: portal.name,
   openGraph: { type: "website", locale: "es_AR", siteName: portal.name },
   robots: portal.demo ? { index: false, follow: false } : undefined,

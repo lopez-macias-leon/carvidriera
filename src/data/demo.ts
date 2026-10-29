@@ -2,7 +2,7 @@
  * DATOS DE DEMOSTRACIÓN. Agencias, autos, precios y estadísticas son ficticios:
  * sirven para mostrar el portal a las agencias. No representan a ningún comercio real.
  */
-import type { Agencia, Horario, Vehiculo } from "@/lib/types";
+import type { Agencia, Horario, Particular, Taller, Vehiculo } from "@/lib/types";
 import { colorHex } from "./catalogos";
 
 const horarioComercial: Horario = [
@@ -60,8 +60,17 @@ export const agenciasDemo: Agencia[] = [
   },
 ];
 
-type Semilla = Omit<Vehiculo, "slug" | "colorHex" | "fotos" | "estado" | "destacado" | "papelesAlDia" | "permuta" | "financiacion" | "descripcion"> &
-  Partial<Pick<Vehiculo, "estado" | "destacado" | "papelesAlDia" | "permuta" | "financiacion" | "descripcion">>;
+type Semilla = Omit<Vehiculo, "slug" | "colorHex" | "fotos" | "estado" | "destacado" | "papelesAlDia" | "permuta" | "financiacion" | "descripcion" | "vendedor" | "agencia"> &
+  Partial<Pick<Vehiculo, "estado" | "destacado" | "papelesAlDia" | "permuta" | "financiacion" | "descripcion" | "vendedor" | "agencia">>;
+
+/** Particulares ficticios. */
+export const particularesDemo: Particular[] = [
+  { id: "p-laura", nombre: "Laura G.", whatsapp: "", localidad: "capital" },
+  { id: "p-diego", nombre: "Diego R.", whatsapp: "", localidad: "valle-viejo" },
+  { id: "p-carla", nombre: "Carla M.", whatsapp: "", localidad: "fray-mamerto-esquiu" },
+  { id: "p-jose", nombre: "José A.", whatsapp: "", localidad: "capital" },
+];
+const particular = (id: string) => particularesDemo.find((p) => p.id === id)!;
 
 const slugify = (s: string) =>
   s
@@ -94,6 +103,11 @@ const semillas: Semilla[] = [
   { codigo: "n7b4t", agencia: "automotores-demo", tipo: "camioneta", carroceria: "pickup", condicion: "usado", marca: "Nissan", modelo: "Frontier", version: "2.3 LE 4x4 AT", anio: 2022, km: 52000, combustible: "diesel", caja: "automatica", color: "Bordó", puertas: 4, precio: 36500, moneda: "USD", localidad: "capital", publicado: "2026-10-14", permuta: true },
   { codigo: "y5p9g", agencia: "esquiu-demo-usados", tipo: "auto", carroceria: "sedan", condicion: "usado", marca: "Chevrolet", modelo: "Cruze", version: "1.4T LTZ", anio: 2017, km: 99000, combustible: "nafta", caja: "automatica", color: "Blanco", puertas: 4, precio: null, moneda: "ARS", localidad: "fray-mamerto-esquiu", publicado: "2026-10-12", estado: "vendido" },
   { codigo: "w3a7e", agencia: "valle-demo-motors", tipo: "auto", carroceria: "hatch", condicion: "usado", marca: "Renault", modelo: "Sandero", version: "1.6 Stepway", anio: 2020, km: 63000, combustible: "nafta", caja: "manual", color: "Azul", puertas: 5, precio: 16800000, moneda: "ARS", localidad: "valle-viejo", publicado: "2026-10-11" },
+  // Particulares: avisos gratis que vencen a los 60 días.
+  { codigo: "q1l4g", vendedor: "particular", particular: particular("p-laura"), tipo: "auto", carroceria: "hatch", condicion: "usado", marca: "Fiat", modelo: "Argo", version: "1.3 Drive", anio: 2019, km: 72000, combustible: "nafta", caja: "manual", color: "Blanco", puertas: 5, precio: 14200000, moneda: "ARS", localidad: "capital", publicado: "2026-10-26", vence: "2026-12-25", destacado: true, destacadoHasta: "2026-11-02", descripcion: "Fiat Argo 2019, único dueño, service al día en concesionario. Cubiertas al 70 %. Lo vendo por compra de una camioneta." },
+  { codigo: "q2d7r", vendedor: "particular", particular: particular("p-diego"), tipo: "camioneta", carroceria: "pickup", condicion: "usado", marca: "Toyota", modelo: "Hilux", version: "2.4 DX 4x2", anio: 2018, km: 135000, combustible: "diesel", caja: "manual", color: "Gris", puertas: 4, precio: 24000, moneda: "USD", localidad: "valle-viejo", publicado: "2026-10-25", vence: "2026-12-24", permuta: true, descripcion: "Hilux DX 2018 de uso particular, nunca trabajó en el campo. Papeles al día. Acepto permuta por auto de menor valor." },
+  { codigo: "q3c2m", vendedor: "particular", particular: particular("p-carla"), tipo: "auto", carroceria: "hatch", condicion: "usado", marca: "Volkswagen", modelo: "Gol Trend", version: "1.6 Pack I", anio: 2015, km: 148000, combustible: "nafta_gnc", caja: "manual", color: "Rojo", puertas: 5, precio: 8500000, moneda: "ARS", localidad: "fray-mamerto-esquiu", publicado: "2026-10-23", vence: "2026-12-22", descripcion: "Gol Trend con GNC de quinta generación, ideal para trabajar. Oblea al día." },
+  { codigo: "q4j9s", vendedor: "particular", particular: particular("p-jose"), tipo: "suv", carroceria: "suv", condicion: "usado", marca: "Renault", modelo: "Duster", version: "2.0 Privilege 4x4", anio: 2016, km: 118000, combustible: "nafta", caja: "manual", color: "Gris", puertas: 5, precio: 13900000, moneda: "ARS", localidad: "capital", publicado: "2026-10-20", vence: "2026-12-19", papelesAlDia: false, descripcion: "Duster 4x4, anda perfecto. Debe la VTV. Escucho ofertas razonables." },
 ];
 
 const descripcionBase = (s: Semilla) =>
@@ -102,6 +116,8 @@ const descripcionBase = (s: Semilla) =>
     : `${s.marca} ${s.modelo} ${s.version} ${s.anio}, ${s.km.toLocaleString("es-AR")} km. Muy buen estado general, service al día. Se puede ver en la agencia en horario comercial.`;
 
 export const vehiculosDemo: Vehiculo[] = semillas.map((s) => ({
+  vendedor: "agencia",
+  agencia: "",
   estado: "publicado",
   destacado: false,
   papelesAlDia: true,
@@ -124,3 +140,78 @@ export const estadisticasDemo: Record<string, { vistas: number; whatsapp: number
   f4q6j: { vistas: 221, whatsapp: 14, compartidos: 6 },
   n7b4t: { vistas: 98, whatsapp: 4, compartidos: 1 },
 };
+
+/** Talleres ficticios del apartado de mecánicos. */
+export const talleresDemo: Taller[] = [
+  {
+    slug: "taller-demo-central",
+    nombre: "Taller Demo Central",
+    descripcion: "Taller ficticio de demostración. Mecánica general, service y revisión completa antes de comprar un usado.",
+    direccion: "Calle de Ejemplo 789",
+    localidad: "capital",
+    whatsapp: "",
+    horarios: horarioComercial,
+    especialidades: ["mecanica", "service", "precompra", "tren_delantero"],
+    verificado: true,
+    color: "#3b4a5c",
+    lat: -28.4655,
+    lng: -65.7842,
+  },
+  {
+    slug: "diesel-demo-norte",
+    nombre: "Diésel Demo Norte",
+    descripcion: "Taller ficticio de demostración. Especialistas en camionetas diésel e inyección electrónica.",
+    direccion: "Av. de Ejemplo 2100",
+    localidad: "capital",
+    whatsapp: "",
+    horarios: [{ dias: [1, 2, 3, 4, 5], desde: "08:00", hasta: "17:00" }],
+    especialidades: ["diesel", "inyeccion", "precompra", "mecanica"],
+    verificado: true,
+    color: "#5a3d1e",
+    lat: -28.4512,
+    lng: -65.7751,
+  },
+  {
+    slug: "electricidad-demo-valle",
+    nombre: "Electricidad Demo Valle",
+    descripcion: "Taller ficticio de demostración. Electricidad del automotor, alarmas y aire acondicionado.",
+    direccion: "Ruta de Ejemplo km 3",
+    localidad: "valle-viejo",
+    whatsapp: "",
+    horarios: horarioComercial,
+    especialidades: ["electricidad", "aire", "inyeccion"],
+    verificado: true,
+    color: "#1f5f6b",
+    lat: -28.4978,
+    lng: -65.7265,
+  },
+  {
+    slug: "chapa-pintura-demo",
+    nombre: "Chapa y Pintura Demo",
+    descripcion: "Taller ficticio de demostración. Chapa, pintura y pulido.",
+    direccion: "Pasaje de Ejemplo 45",
+    localidad: "capital",
+    whatsapp: "",
+    horarios: [{ dias: [1, 2, 3, 4, 5], desde: "08:30", hasta: "18:00" }],
+    especialidades: ["chapa_pintura"],
+    verificado: false,
+    color: "#6b2a3a",
+  },
+  {
+    slug: "gomeria-demo-esquiu",
+    nombre: "Gomería Demo Esquiú",
+    descripcion: "Gomería ficticia de demostración. Cubiertas, alineación y balanceo, y revisión antes de comprar.",
+    direccion: "Calle de Ejemplo 12",
+    localidad: "fray-mamerto-esquiu",
+    whatsapp: "",
+    horarios: [
+      { dias: [1, 2, 3, 4, 5, 6], desde: "08:00", hasta: "13:00" },
+      { dias: [1, 2, 3, 4, 5], desde: "16:00", hasta: "20:00" },
+    ],
+    especialidades: ["gomeria", "tren_delantero", "precompra"],
+    verificado: true,
+    color: "#2e5a2a",
+    lat: -28.3311,
+    lng: -65.7202,
+  },
+];

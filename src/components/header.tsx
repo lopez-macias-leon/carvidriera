@@ -10,9 +10,9 @@ import { Logo } from "./logo";
 export const NAV = [
   { href: "/", label: "Inicio" },
   { href: "/autos", label: "Autos" },
-  { href: "/agencias", label: "Agencias" },
-  { href: "/para-agencias", label: "Para agencias" },
-  { href: "/contacto", label: "Contacto" },
+  { href: "/concesionarias", label: "Concesionarias" },
+  { href: "/mecanicos", label: "Mecánicos" },
+  { href: "/mi-cuenta", label: "Mis avisos" },
 ];
 
 export function Header() {
@@ -63,8 +63,8 @@ export function Header() {
               </span>
             )}
           </Link>
-          <Link href="/para-agencias" className="btn btn-brand hidden text-sm lg:inline-flex">
-            Publicá tu stock
+          <Link href="/publicar" className="btn btn-brand hidden text-sm sm:inline-flex">
+            Publicá gratis
           </Link>
           <button type="button" className="grid size-11 place-items-center rounded-full hover:bg-soft md:hidden" aria-label="Abrir menú" aria-expanded={abierto} onClick={() => setAbierto(true)}>
             <MenuIcon className="size-6" />
@@ -102,13 +102,13 @@ export function Header() {
               </li>
             </ul>
             <div className="mt-auto rounded-2xl bg-soft p-4">
-              <p className="font-bold">¿Tenés una agencia?</p>
-              <p className="mt-1 text-sm text-muted">Publicá tu stock y recibí consultas por WhatsApp.</p>
-              <Link href="/para-agencias" onClick={() => setAbierto(false)} className="btn btn-brand mt-3 w-full">
-                Ver planes
+              <p className="font-bold">¿Vendés tu auto?</p>
+              <p className="mt-1 text-sm text-muted">Publicalo gratis y recibí consultas por WhatsApp.</p>
+              <Link href="/publicar" onClick={() => setAbierto(false)} className="btn btn-brand mt-3 w-full">
+                Publicá gratis
               </Link>
               <Link href="/panel" onClick={() => setAbierto(false)} className="mt-2 block py-2 text-center text-sm font-semibold text-brand">
-                Ingresar al panel de agencia
+                Ingresar al panel de concesionaria
               </Link>
             </div>
           </nav>

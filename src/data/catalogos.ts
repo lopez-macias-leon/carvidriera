@@ -1,4 +1,4 @@
-import type { Caja, Combustible, Condicion, Localidad, Tipo } from "@/lib/types";
+import type { Caja, Combustible, Condicion, Especialidad, Localidad, Tipo } from "@/lib/types";
 
 export const localidades: Localidad[] = [
   { slug: "capital", nombre: "San Fernando del Valle de Catamarca" },
@@ -62,6 +62,19 @@ export const marcas: Record<string, string[]> = {
   Toyota: ["Corolla", "Corolla Cross", "Etios", "Hilux", "SW4", "Yaris"],
   Volkswagen: ["Amarok", "Gol Trend", "Nivus", "Polo", "Saveiro", "T-Cross", "Taos", "Virtus"],
 };
+
+export const especialidades: { value: Especialidad; label: string }[] = [
+  { value: "mecanica", label: "Mecánica general" },
+  { value: "service", label: "Service" },
+  { value: "precompra", label: "Revisión precompra" },
+  { value: "electricidad", label: "Electricidad" },
+  { value: "inyeccion", label: "Inyección" },
+  { value: "diesel", label: "Diésel" },
+  { value: "chapa_pintura", label: "Chapa y pintura" },
+  { value: "gomeria", label: "Gomería" },
+  { value: "tren_delantero", label: "Tren delantero" },
+  { value: "aire", label: "Aire acondicionado" },
+];
 
 export const frasesDescripcion = [
   "Único dueño",

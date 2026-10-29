@@ -23,7 +23,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
       size,
     );
   }
-  const agencia = await getAgencia(v.agencia);
+  const agencia = v.vendedor === "agencia" ? await getAgencia(v.agencia) : null;
   return new ImageResponse(
     (
       <div style={{ display: "flex", width: "100%", height: "100%", background: "#ffffff", fontFamily: "sans-serif" }}>
@@ -44,7 +44,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
               {`${formatKm(v.km)} · ${labelCombustible(v.combustible)}`}
             </div>
           </div>
-          <div style={{ display: "flex", fontSize: 26, color: "#4f5d70" }}>{agencia ? `${agencia.nombre} · Catamarca` : "Catamarca"}</div>
+          <div style={{ display: "flex", fontSize: 26, color: "#4f5d70" }}>{agencia ? `${agencia.nombre} · Catamarca` : "Particular · Catamarca"}</div>
         </div>
       </div>
     ),

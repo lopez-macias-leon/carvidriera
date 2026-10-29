@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Ficha } from "@/components/ficha";
 import { FichaLocal } from "@/components/ficha-local";
 import { portal } from "@/config/portal";
-import { getAgencia, getAgencias, getSimilares, getStockAgencia, getTodosLosVehiculos, getVehiculo, getVehiculosVisibles } from "@/lib/catalog";
+import { getAgencia, getAgencias, getSimilares, getStockAgencia, getTalleres, getTalleresPrecompra, getTodosLosVehiculos, getVehiculo, getVehiculosVisibles } from "@/lib/catalog";
 import { formatKm, formatPrecio, nombreLocalidad, tituloCompleto } from "@/lib/format";
 
 export async function generateStaticParams() {
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: PageProps<"/auto/[slug]">): P
   const precio = v.precio !== null ? ` · ${formatPrecio(v.precio, v.moneda)}` : "";
   return {
     title: `${titulo}${precio}`,
-    description: `${tituloCompleto(v)}, ${formatKm(v.km)}${precio} en ${nombreLocalidad(v.localidad)}. Mirá fotos y datos, y consultá directo por WhatsApp a la agencia.`,
+    description: `${tituloCompleto(v)}, ${formatKm(v.km)}${precio} en ${nombreLocalidad(v.localidad)}. Mirá fotos y datos, y consultá directo por WhatsApp al vendedor.`,
     alternates: { canonical: `/auto/${v.slug}` },
     openGraph: { title: `${tituloCompleto(v)}${precio}`, type: "website" },
     robots: v.estado === "publicado" || v.estado === "reservado" ? undefined : { index: false },
@@ -30,12 +30,12 @@ export default async function AutoPage({ params, searchParams }: PageProps<"/aut
 
   if (!v) {
     // Demo: puede ser un auto cargado desde el panel en este teléfono. En producción, notFound().
-    const [agencias, similares] = await Promise.all([getAgencias(), getVehiculosVisibles()]);
-    return <FichaLocal slug={slug} agencias={agencias} similares={similares} />;
+    const [agencias, similares, talleres] = await Promise.all([getAgencias(), getVehiculosVisibles(), getTalleres()]);
+    return <FichaLocal slug={slug} agencias={agencias} similares={similares} talleres={talleres} />;
   }
 
-  const agencia = (await getAgencia(v.agencia))!;
-  const [similares, stock] = await Promise.all([getSimilares(v), getStockAgencia(v.agencia)]);
+  const agencia = v.vendedor === "agencia" ? await getAgencia(v.agencia) : null;
+  const [similares, stock, talleres] = await Promise.all([getSimilares(v), agencia ? getStockAgencia(agencia.slug) : [], getTalleresPrecompra(v)]);
   const masDeLaAgencia = stock.filter((x) => x.codigo !== v.codigo).slice(0, 4);
 
   const jsonLd = {
@@ -56,7 +56,7 @@ export default async function AutoPage({ params, searchParams }: PageProps<"/aut
         price: v.precio,
         priceCurrency: v.moneda,
         availability: v.estado === "publicado" ? "https://schema.org/InStock" : "https://schema.org/LimitedAvailability",
-        seller: { "@type": "AutoDealer", name: agencia.nombre },
+        seller: agencia ? { "@type": "AutoDealer", name: agencia.nombre } : { "@type": "Person", name: v.particular?.nombre },
       },
     }),
   };
@@ -64,7 +64,7 @@ export default async function AutoPage({ params, searchParams }: PageProps<"/aut
   return (
     <>
       {!portal.demo && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />}
-      <Ficha v={v} agencia={agencia} similares={similares} masDeLaAgencia={masDeLaAgencia} desdeCatalogo={desde === "agencia"} />
+      <Ficha v={v} agencia={agencia} similares={similares} masDeLaAgencia={masDeLaAgencia} desdeCatalogo={desde === "agencia"} talleres={talleres} />
     </>
   );
 }

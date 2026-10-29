@@ -1,10 +1,18 @@
 /** Filtros y orden del listado. Sin datos: se usa también desde componentes del navegador. */
-import type { Caja, Combustible, Condicion, Moneda, Tipo, Vehiculo } from "./types";
+import type { Caja, Combustible, Condicion, Moneda, Tipo, TipoVendedor, Vehiculo } from "./types";
 
 export const POR_PAGINA = 24;
 
 /** Visible en el portal: publicado o reservado (y, en producción, agencia al día y sin bloqueo). */
-export const esVisible = (v: Vehiculo) => v.estado === "publicado" || v.estado === "reservado";
+const hoy = () => new Date().toISOString().slice(0, 10);
+
+/** Visible: publicado o reservado y, si es de un particular, sin vencer (en producción además: agencia al día y sin bloqueo). */
+export const esVisible = (v: Vehiculo) =>
+  (v.estado === "publicado" || v.estado === "reservado") && !(v.vendedor === "particular" && v.vence && v.vence.slice(0, 10) < hoy());
+
+/** Destacado vigente: el de una agencia mientras lo tenga marcado; el pago de un particular, hasta su fecha. */
+export const estaDestacado = (v: Pick<Vehiculo, "destacado" | "destacadoHasta" | "estado">) =>
+  v.estado === "publicado" && v.destacado && (!v.destacadoHasta || v.destacadoHasta.slice(0, 10) >= hoy());
 
 export type Orden = "recientes" | "precio_asc" | "precio_desc" | "km" | "anio";
 
@@ -24,6 +32,7 @@ export type Filtros = {
   caja?: Caja;
   localidad?: string[];
   agencia?: string;
+  vendedor?: TipoVendedor;
   permuta?: boolean;
   financiacion?: boolean;
   orden: Orden;
@@ -60,6 +69,7 @@ export function leerFiltros(p: Params): Filtros {
     caja: uno(p.caja) as Caja | undefined,
     localidad: varios(p.localidad),
     agencia: uno(p.agencia),
+    vendedor: ["agencia", "particular"].includes(uno(p.vendedor) ?? "") ? (uno(p.vendedor) as TipoVendedor) : undefined,
     permuta: uno(p.permuta) === "1" || undefined,
     financiacion: uno(p.financiacion) === "1" || undefined,
     orden: orden && ["recientes", "precio_asc", "precio_desc", "km", "anio"].includes(orden) ? orden : "recientes",
@@ -102,6 +112,7 @@ export function aplicarFiltros(lista: Vehiculo[], f: Filtros, salvo?: keyof Filt
     if (f.caja && salvo !== "caja" && v.caja !== f.caja) return false;
     if (f.localidad && salvo !== "localidad" && !f.localidad.includes(v.localidad)) return false;
     if (f.agencia && salvo !== "agencia" && v.agencia !== f.agencia) return false;
+    if (f.vendedor && salvo !== "vendedor" && v.vendedor !== f.vendedor) return false;
     if (f.permuta && !v.permuta) return false;
     if (f.financiacion && !v.financiacion) return false;
     return true;
@@ -127,9 +138,12 @@ export function ordenar(lista: Vehiculo[], orden: Orden) {
     case "anio":
       return copia.sort((a, b) => b.anio - a.anio || b.publicado.localeCompare(a.publicado));
     default:
-      // Reservados al final dentro del mismo orden.
+      // Destacados vigentes primero y reservados al final.
       return copia.sort(
-        (a, b) => Number(a.estado === "reservado") - Number(b.estado === "reservado") || b.publicado.localeCompare(a.publicado),
+        (a, b) =>
+          Number(estaDestacado(b)) - Number(estaDestacado(a)) ||
+          Number(a.estado === "reservado") - Number(b.estado === "reservado") ||
+          b.publicado.localeCompare(a.publicado),
       );
   }
 }
@@ -166,6 +180,7 @@ export function filtrosAQuery(f: Partial<Filtros>) {
   set("caja", f.caja);
   set("localidad", f.localidad);
   set("agencia", f.agencia);
+  set("vendedor", f.vendedor);
   set("permuta", f.permuta);
   set("financiacion", f.financiacion);
   if (f.orden && f.orden !== "recientes") set("orden", f.orden);
@@ -187,6 +202,7 @@ export function cantidadFiltrosActivos(f: Filtros) {
     f.caja,
     f.localidad?.length,
     f.agencia,
+    f.vendedor,
     f.permuta,
     f.financiacion,
   ].filter(Boolean).length;

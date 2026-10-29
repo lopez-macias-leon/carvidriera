@@ -1,5 +1,5 @@
-import { cajas, combustibles, localidades, tipos } from "@/data/catalogos";
-import type { Caja, Combustible, Horario, Moneda, Tipo, Vehiculo } from "./types";
+import { cajas, combustibles, especialidades, localidades, tipos } from "@/data/catalogos";
+import type { Caja, Combustible, Especialidad, Horario, Moneda, Tipo, Vehiculo } from "./types";
 
 const numero = new Intl.NumberFormat("es-AR");
 
@@ -14,6 +14,7 @@ export const formatNumero = (n: number) => numero.format(n);
 export const labelTipo = (t: Tipo) => tipos.find((x) => x.value === t)?.label ?? t;
 export const labelCombustible = (c: Combustible) => combustibles.find((x) => x.value === c)?.label ?? c;
 export const labelCaja = (c: Caja) => cajas.find((x) => x.value === c)?.label ?? c;
+export const labelEspecialidad = (e: Especialidad) => especialidades.find((x) => x.value === e)?.label ?? e;
 export const nombreLocalidad = (slug: string) => localidades.find((l) => l.slug === slug)?.nombre ?? slug;
 /** Nombre corto para tarjetas. */
 export const localidadCorta = (slug: string) => (slug === "capital" ? "Catamarca Capital" : nombreLocalidad(slug));

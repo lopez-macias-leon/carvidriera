@@ -216,3 +216,23 @@ export const PhoneIcon2 = (p: IconProps) => (
     <path d="M10.5 18.5h3" />
   </Base>
 );
+
+export const UserIcon = (p: IconProps) => (
+  <Base {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0116 0" />
+  </Base>
+);
+
+export const WrenchIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z" />
+  </Base>
+);
+
+export const TagIcon = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M3 12V4h8l10 10-8 8z" />
+    <circle cx="7.5" cy="8.5" r="1.5" />
+  </Base>
+);

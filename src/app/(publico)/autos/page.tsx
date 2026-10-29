@@ -14,7 +14,8 @@ function titulo(f: Filtros) {
   const cond = f.condicion === "0km" ? " 0 km" : f.condicion === "usado" ? " usados" : "";
   const marca = f.marca ? ` ${f.marca}${f.modelo ? ` ${f.modelo}` : ""}` : "";
   const lugar = f.localidad?.length === 1 ? localidadCorta(f.localidad[0]) : "Catamarca";
-  return `${tipo}${marca}${cond} en ${lugar}`;
+  const quien = f.vendedor === "agencia" ? " de concesionarias" : f.vendedor === "particular" ? " de particulares" : "";
+  return `${tipo}${marca}${cond}${quien} en ${lugar}`;
 }
 
 export async function generateMetadata({ searchParams }: PageProps<"/autos">): Promise<Metadata> {
@@ -51,7 +52,7 @@ export default async function AutosPage({ searchParams }: PageProps<"/autos">) {
             <div className="lg:hidden">
               <Filters filtros={filtros} conteos={conteos} agencias={agencias} total={total} soloSheet />
             </div>
-            <div className="ml-auto">
+            <div className="ml-auto min-w-0">
               <SortSelect filtros={filtros} />
             </div>
           </div>

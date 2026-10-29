@@ -5,6 +5,7 @@ import { Suspense, useEffect, useState } from "react";
 import { CarForm } from "@/components/car-form";
 import { vehiculosDemo } from "@/data/demo";
 import { obtenerLocal } from "@/lib/demo-store";
+import { AGENCIA_DEMO } from "@/lib/panel";
 import type { Vehiculo } from "@/lib/types";
 
 function Nuevo() {
@@ -16,7 +17,7 @@ function Nuevo() {
   }, [duplicar, demo]);
   const base = !duplicar ? null : (demo ?? local);
   if (base === undefined) return <p className="py-16 text-center text-muted">Cargando…</p>;
-  return <CarForm key={duplicar ?? "nuevo"} inicial={base ?? undefined} duplicar={!!base} />;
+  return <CarForm key={duplicar ?? "nuevo"} inicial={base ?? undefined} duplicar={!!base} publicador={{ tipo: "agencia", agencia: AGENCIA_DEMO }} />;
 }
 
 export default function NuevoAutoPage() {

@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import { CarForm } from "@/components/car-form";
 import { obtenerLocal } from "@/lib/demo-store";
+import { AGENCIA_DEMO } from "@/lib/panel";
 import type { Vehiculo } from "@/lib/types";
 
 function Editar() {
@@ -23,7 +24,7 @@ function Editar() {
         </Link>
       </div>
     );
-  return <CarForm inicial={v} />;
+  return <CarForm inicial={v} publicador={{ tipo: "agencia", agencia: AGENCIA_DEMO }} />;
 }
 
 export default function EditarAutoPage() {

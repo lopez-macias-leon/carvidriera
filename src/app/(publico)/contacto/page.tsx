@@ -23,7 +23,7 @@ export default function ContactoPage() {
       </p>
       <p className="mt-4">
         ¿Tenés una agencia?{" "}
-        <Link href="/para-agencias" className="font-bold text-brand underline">
+        <Link href="/para-concesionarias" className="font-bold text-brand underline">
           Mirá los planes
         </Link>
         .

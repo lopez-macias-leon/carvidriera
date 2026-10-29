@@ -2,15 +2,16 @@ import Link from "next/link";
 import { formatKm, formatPrecio, labelCombustible, labelCaja, localidadCorta, tituloCompleto, tituloVehiculo } from "@/lib/format";
 import type { Agencia, Vehiculo } from "@/lib/types";
 import { FavoriteButton } from "./favorite-button";
-import { PinIcon, VerifiedIcon } from "./icons";
+import { estaDestacado } from "@/lib/filtros";
+import { PinIcon, UserIcon, VerifiedIcon } from "./icons";
 import { VehiculoFoto } from "./vehiculo-foto";
 
-export function EstadoBadge({ v }: { v: Pick<Vehiculo, "estado" | "destacado" | "condicion"> }) {
+export function EstadoBadge({ v }: { v: Pick<Vehiculo, "estado" | "destacado" | "destacadoHasta" | "condicion"> }) {
   if (v.estado === "reservado") return <span className="rounded-md bg-warn-bg px-2 py-1 text-xs font-bold text-warn">Reservado</span>;
   if (v.estado === "vendido") return <span className="rounded-md bg-ink px-2 py-1 text-xs font-bold text-white">Vendido</span>;
   return (
     <span className="flex gap-1.5">
-      {v.destacado && <span className="rounded-md bg-gold-bg px-2 py-1 text-xs font-bold text-gold">Destacado</span>}
+      {estaDestacado(v) && <span className="rounded-md bg-gold-bg px-2 py-1 text-xs font-bold text-gold">Destacado</span>}
       {v.condicion === "0km" && <span className="rounded-md bg-brand px-2 py-1 text-xs font-bold text-white">0 km</span>}
     </span>
   );
@@ -54,7 +55,12 @@ export function CarCard({
             <PinIcon className="size-3.5 shrink-0" />
             <span className="truncate">{localidadCorta(v.localidad)}</span>
           </span>
-          {agencia && (
+          {v.vendedor === "particular" ? (
+            <span className="flex min-w-0 items-center gap-1 font-semibold text-ink">
+              <UserIcon className="size-3.5 shrink-0" />
+              <span className="truncate">Particular</span>
+            </span>
+          ) : agencia && (
             <span className="flex min-w-0 items-center gap-1 font-semibold text-ink">
               <span className="truncate">{agencia.nombre}</span>
               {agencia.verificada && (

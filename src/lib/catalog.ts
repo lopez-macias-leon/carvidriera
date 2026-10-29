@@ -2,9 +2,9 @@
  * Acceso a los datos del portal. Hoy lee los datos de demostración;
  * con Supabase, estas mismas funciones consultan la vista `vehiculos_publicos`.
  */
-import { agenciasDemo, vehiculosDemo } from "@/data/demo";
-import { aplicarFiltros, contar, esVisible, ordenar, POR_PAGINA, type Filtros } from "./filtros";
-import type { Agencia, Vehiculo } from "./types";
+import { agenciasDemo, talleresDemo, vehiculosDemo } from "@/data/demo";
+import { aplicarFiltros, contar, esVisible, estaDestacado, ordenar, POR_PAGINA, type Filtros } from "./filtros";
+import type { Agencia, Taller, Vehiculo } from "./types";
 
 export async function getVehiculosVisibles() {
   return vehiculosDemo.filter(esVisible);
@@ -26,6 +26,7 @@ export async function buscarVehiculos(f: Filtros) {
       caja: contar(visibles, f, "caja", "caja"),
       localidad: contar(visibles, f, "localidad", "localidad"),
       agencia: contar(visibles, f, "agencia", "agencia"),
+      vendedor: contar(visibles, f, "vendedor", "vendedor"),
     },
   };
 }
@@ -40,11 +41,12 @@ export async function getTodosLosVehiculos() {
 }
 
 export async function getRecientes(n: number) {
-  return ordenar(await getVehiculosVisibles(), "recientes").slice(0, n);
+  // Solo por fecha: los destacados ya tienen su propia fila en la portada.
+  return [...(await getVehiculosVisibles())].sort((a, b) => b.publicado.localeCompare(a.publicado)).slice(0, n);
 }
 
 export async function getDestacados() {
-  return (await getVehiculosVisibles()).filter((v) => v.destacado && v.estado === "publicado");
+  return (await getVehiculosVisibles()).filter(estaDestacado);
 }
 
 export async function getSimilares(v: Vehiculo, n = 4) {
@@ -87,3 +89,22 @@ export async function contarPorTipo() {
   };
 }
 
+
+export async function getTalleres(): Promise<Taller[]> {
+  return talleresDemo;
+}
+
+export async function getTaller(slug: string) {
+  return talleresDemo.find((t) => t.slug === slug) ?? null;
+}
+
+/**
+ * Talleres que hacen revisión precompra para mostrar en la ficha de un usado:
+ * primero los de la misma localidad, y el orden rota según el auto para repartir las apariciones.
+ */
+export async function getTalleresPrecompra(v: Vehiculo, n = 3) {
+  const lista = talleresDemo.filter((t) => t.especialidades.includes("precompra"));
+  const giro = [...v.codigo].reduce((a, c) => a + c.charCodeAt(0), 0) % Math.max(1, lista.length);
+  const rotada = [...lista.slice(giro), ...lista.slice(0, giro)];
+  return [...rotada.filter((t) => t.localidad === v.localidad), ...rotada.filter((t) => t.localidad !== v.localidad)].slice(0, n);
+}

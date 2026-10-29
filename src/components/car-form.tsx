@@ -8,13 +8,19 @@ import { useOrigen } from "@/lib/cliente";
 import { borrarBorrador, guardarBorrador, guardarLocal, leerBorrador, nuevoCodigo } from "@/lib/demo-store";
 import { formatKm, formatNumero, formatPrecio, labelCaja, labelCombustible } from "@/lib/format";
 import { comprimirFoto } from "@/lib/imagenes";
-import { AGENCIA_DEMO } from "@/lib/panel";
-import type { Caja, Carroceria, Combustible, Condicion, Foto, Moneda, Tipo, Vehiculo } from "@/lib/types";
+import { DIAS_AVISO_PARTICULAR, FOTOS_PARTICULAR } from "@/config/planes";
+import type { Agencia, Caja, Carroceria, Combustible, Condicion, Foto, Moneda, Particular, Tipo, Vehiculo } from "@/lib/types";
 import { linkWhatsApp, mensajeCompartirAuto, urlAviso } from "@/lib/whatsapp";
 import { CarCard } from "./car-card";
 import { CameraIcon, CheckIcon, ChevronLeft, ChevronRight, CloseIcon, WhatsAppIcon } from "./icons";
 
 const MAX_FOTOS = 12;
+
+/** Quién publica: una concesionaria (desde su panel) o un particular (desde "Mi cuenta"). */
+export type Publicador = { tipo: "agencia"; agencia: Agencia } | { tipo: "particular"; particular: Particular; topeAlcanzado: boolean };
+
+const rutas = (p: Publicador) => (p.tipo === "agencia" ? { nuevo: "/panel/autos/nuevo", lista: "/panel/autos" } : { nuevo: "/mi-cuenta/publicar", lista: "/mi-cuenta" });
+const sumarDias = (iso: string, dias: number) => new Date(new Date(iso).getTime() + dias * 86400000).toISOString();
 const MARCAS_POPULARES = ["Toyota", "Volkswagen", "Fiat", "Chevrolet", "Ford", "Renault", "Peugeot", "Nissan"];
 const ANIOS = Array.from({ length: 37 }, (_, i) => 2026 - i);
 const PASOS = ["Fotos", "El auto", "Precio", "Revisar"];
@@ -92,13 +98,26 @@ function desdeVehiculo(v: Vehiculo, duplicar: boolean): Datos {
   };
 }
 
-function aVehiculo(d: Datos, base?: Vehiculo, estado: Vehiculo["estado"] = "publicado"): Vehiculo {
+function aVehiculo(d: Datos, publicador: Publicador, base?: Vehiculo, estado: Vehiculo["estado"] = "publicado"): Vehiculo {
   const codigo = base?.codigo ?? nuevoCodigo();
+  const publicado = base?.publicado ?? new Date().toISOString();
+  const vendedor =
+    publicador.tipo === "agencia"
+      ? { vendedor: "agencia" as const, agencia: publicador.agencia.slug, localidad: publicador.agencia.localidad }
+      : {
+          vendedor: "particular" as const,
+          agencia: "",
+          particular: publicador.particular,
+          localidad: publicador.particular.localidad,
+          vence: base?.vence ?? sumarDias(publicado, DIAS_AVISO_PARTICULAR),
+          completo: base?.completo,
+          destacadoHasta: base?.destacadoHasta,
+        };
   const tipo = (d.tipo || "auto") as Tipo;
   const km = d.condicion === "0km" ? 0 : Number(d.km) || 0;
   const v = {
     codigo,
-    agencia: AGENCIA_DEMO.slug,
+    ...vendedor,
     tipo,
     carroceria: tipo === "auto" && d.puertas === 5 ? ("hatch" as const) : CARROCERIA[tipo],
     condicion: d.condicion,
@@ -119,10 +138,9 @@ function aVehiculo(d: Datos, base?: Vehiculo, estado: Vehiculo["estado"] = "publ
     permuta: d.permuta,
     financiacion: d.financiacion,
     descripcion: d.descripcion.trim(),
-    localidad: AGENCIA_DEMO.localidad,
     estado,
-    destacado: false,
-    publicado: base?.publicado ?? new Date().toISOString(),
+    destacado: base?.destacado ?? false,
+    publicado,
     fotos: d.fotos,
     local: true,
   };
@@ -177,7 +195,7 @@ function Interruptor({ label, ayuda, valor, onChange }: { label: string; ayuda?:
 
 /* ---------- Paso 1: fotos ---------- */
 
-function PasoFotos({ fotos, setFotos }: { fotos: Foto[]; setFotos: (f: (prev: Foto[]) => Foto[]) => void }) {
+function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (prev: Foto[]) => Foto[]) => void; max: number }) {
   const input = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(0);
   const [error, setError] = useState("");
@@ -185,14 +203,14 @@ function PasoFotos({ fotos, setFotos }: { fotos: Foto[]; setFotos: (f: (prev: Fo
   const agregar = async (files: FileList | null) => {
     if (!files?.length) return;
     setError("");
-    const lugar = MAX_FOTOS - fotos.length;
+    const lugar = max - fotos.length;
     const lista = Array.from(files).slice(0, lugar);
-    if (files.length > lugar) setError(`Podés subir hasta ${MAX_FOTOS} fotos. Se agregaron las primeras ${lugar}.`);
+    if (files.length > lugar) setError(`Podés subir hasta ${max} fotos. Se agregaron las primeras ${lugar}.`);
     setProcesando((n) => n + lista.length);
     for (const f of lista) {
       try {
         const { src } = await comprimirFoto(f);
-        setFotos((prev) => (prev.length < MAX_FOTOS ? [...prev, { src }] : prev));
+        setFotos((prev) => (prev.length < max ? [...prev, { src }] : prev));
       } catch {
         setError("Alguna foto no se pudo leer. Probá con otra.");
       }
@@ -212,13 +230,13 @@ function PasoFotos({ fotos, setFotos }: { fotos: Foto[]; setFotos: (f: (prev: Fo
   return (
     <div>
       <h2 className="text-xl font-extrabold">Fotos del auto</h2>
-      <p className="mt-1 text-muted">Hasta {MAX_FOTOS}. La primera es la portada. Se achican solas para que carguen rápido.</p>
+      <p className="mt-1 text-muted">Hasta {max}. La primera es la portada. Se achican solas para que carguen rápido.</p>
       <input ref={input} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => (agregar(e.target.files), (e.target.value = ""))} aria-label="Elegir fotos" />
-      <button type="button" onClick={() => input.current?.click()} disabled={fotos.length >= MAX_FOTOS} className="mt-4 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand/40 bg-brand-light/40 font-bold text-brand disabled:opacity-50">
+      <button type="button" onClick={() => input.current?.click()} disabled={fotos.length >= max} className="mt-4 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand/40 bg-brand-light/40 font-bold text-brand disabled:opacity-50">
         <CameraIcon className="size-8" />
         {fotos.length ? "Agregar más fotos" : "Elegir fotos o sacar con la cámara"}
         <span className="text-sm font-semibold text-muted">
-          {fotos.length} de {MAX_FOTOS}
+          {fotos.length} de {max}
         </span>
       </button>
       {error && (
@@ -379,7 +397,7 @@ function PasoPrecio({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) 
       <Interruptor label="Consultar precio" ayuda="No mostrar el precio en el aviso" valor={d.consultar} onChange={(consultar) => set({ consultar })} />
 
       <div className="space-y-2 pt-2">
-        <Interruptor label="Papeles al día" ayuda="Se muestra como informado por la agencia" valor={d.papeles} onChange={(papeles) => set({ papeles })} />
+        <Interruptor label="Papeles al día" ayuda="Se muestra como informado por el vendedor" valor={d.papeles} onChange={(papeles) => set({ papeles })} />
         <label className="block">
           <span className="text-sm font-bold">Detalle de la documentación (opcional)</span>
           <input className="field mt-1" value={d.documentacion} onChange={(e) => set({ documentacion: e.target.value })} placeholder="Ej. 08 firmado, VTV vigente" maxLength={140} />
@@ -424,8 +442,12 @@ const faltantes = (d: Datos, paso: number) => {
   return f;
 };
 
-export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; duplicar?: boolean }) {
+export function CarForm({ inicial, duplicar = false, publicador }: { inicial?: Vehiculo; duplicar?: boolean; publicador: Publicador }) {
   const editando = !!inicial && !duplicar;
+  const claveBorrador = publicador.tipo;
+  const maxFotos = publicador.tipo === "agencia" || inicial?.completo ? MAX_FOTOS : FOTOS_PARTICULAR;
+  // Tope de autos de un particular: puede guardar borradores, pero no publicar uno más.
+  const sinLugar = publicador.tipo === "particular" && publicador.topeAlcanzado && !editando;
   const [d, setD] = useState<Datos>(inicial ? desdeVehiculo(inicial, duplicar) : VACIO);
   const [paso, setPaso] = useState(0);
   const [faltan, setFaltan] = useState<string[]>([]);
@@ -441,16 +463,16 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
       cargado.current = true;
       return;
     }
-    leerBorrador<{ paso: number; datos: Datos }>().then((b) => {
+    leerBorrador<{ paso: number; datos: Datos }>(claveBorrador).then((b) => {
       if (b && (b.datos.fotos.length || b.datos.marca)) setBorradorPrevio(b);
       cargado.current = true;
     });
-  }, [editando, duplicar]);
+  }, [editando, duplicar, claveBorrador]);
   useEffect(() => {
     if (!cargado.current || editando || listo || borradorPrevio) return;
-    const t = setTimeout(() => guardarBorrador({ paso, datos: d }), 400);
+    const t = setTimeout(() => guardarBorrador(claveBorrador, { paso, datos: d }), 400);
     return () => clearTimeout(t);
-  }, [d, paso, editando, listo, borradorPrevio]);
+  }, [d, paso, editando, listo, borradorPrevio, claveBorrador]);
 
   const set = (c: Partial<Datos>) => setD((prev) => ({ ...prev, ...c }));
   const irA = (n: number) => {
@@ -468,15 +490,15 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
   };
   const guardar = async (estado: Vehiculo["estado"]) => {
     setGuardando(true);
-    const v = aVehiculo(d, editando ? inicial : undefined, estado);
+    const v = aVehiculo(d, publicador, editando ? inicial : undefined, estado);
     await guardarLocal(v);
-    await borrarBorrador();
+    await borrarBorrador(claveBorrador);
     setGuardando(false);
     setListo(v);
     window.scrollTo({ top: 0 });
   };
 
-  if (listo) return <Listo v={listo} editando={editando} />;
+  if (listo) return <Listo v={listo} editando={editando} publicador={publicador} />;
 
   if (borradorPrevio) {
     return (
@@ -501,7 +523,7 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
             type="button"
             className="btn btn-ghost"
             onClick={async () => {
-              await borrarBorrador();
+              await borrarBorrador(claveBorrador);
               setBorradorPrevio(null);
             }}
           >
@@ -512,7 +534,7 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
     );
   }
 
-  const preview = aVehiculo(d, editando ? inicial : undefined);
+  const preview = aVehiculo(d, publicador, editando ? inicial : undefined);
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -533,7 +555,7 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
       </div>
 
       <div className="mt-5 rounded-2xl border border-line bg-surface p-4 sm:p-6">
-        {paso === 0 && <PasoFotos fotos={d.fotos} setFotos={(fn) => setD((prev) => ({ ...prev, fotos: fn(prev.fotos) }))} />}
+        {paso === 0 && <PasoFotos max={maxFotos} fotos={d.fotos} setFotos={(fn) => setD((prev) => ({ ...prev, fotos: fn(prev.fotos) }))} />}
         {paso === 1 && <PasoAuto d={d} set={set} />}
         {paso === 2 && <PasoPrecio d={d} set={set} />}
         {paso === 3 && (
@@ -541,11 +563,11 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
             <h2 className="text-xl font-extrabold">Revisá y publicá</h2>
             <p className="mt-1 text-muted">Así va a ver el comprador la tarjeta de tu auto.</p>
             <div className="mx-auto mt-4 max-w-xs">
-              <CarCard v={preview} agencia={AGENCIA_DEMO} />
+              <CarCard v={preview} agencia={publicador.tipo === "agencia" ? publicador.agencia : undefined} />
             </div>
             <dl className="mt-5 divide-y divide-line rounded-xl border border-line text-sm">
               {[
-                ["Fotos", `${d.fotos.length} de ${MAX_FOTOS}`],
+                ["Fotos", `${d.fotos.length} de ${maxFotos}`],
                 ["Precio", formatPrecio(preview.precio, preview.moneda)],
                 ["Año y km", `${preview.anio} · ${formatKm(preview.km)}`],
                 ["Motor y caja", `${labelCombustible(preview.combustible)} · ${labelCaja(preview.caja)}`],
@@ -566,9 +588,14 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
             Falta completar: {faltan.join(", ")}.
           </p>
         )}
+        {paso === 3 && sinLugar && (
+          <p role="alert" className="mt-5 rounded-xl bg-warn-bg p-3 text-sm font-semibold text-warn">
+            Ya tenés 2 autos publicados, el máximo para particulares. Marcá uno como vendido o pausalo para publicar este. Mientras tanto, podés guardarlo como borrador.
+          </p>
+        )}
       </div>
 
-      <div className="sticky bottom-16 z-30 -mx-4 mt-4 flex gap-2 border-t border-line bg-bg px-4 py-3 md:bottom-0 md:mx-0 md:rounded-2xl md:border">
+      <div className={`sticky z-30 -mx-4 mt-4 flex gap-2 border-t border-line bg-bg px-4 py-3 md:bottom-0 md:mx-0 md:rounded-2xl md:border ${publicador.tipo === "agencia" ? "bottom-16" : "bottom-0"}`}>
         {paso > 0 && (
           <button type="button" onClick={() => irA(paso - 1)} className="btn btn-ghost">
             <ChevronLeft className="size-5" /> Atrás
@@ -585,7 +612,7 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
                 Guardar borrador
               </button>
             )}
-            <button type="button" disabled={guardando} onClick={() => guardar(editando ? inicial!.estado : "publicado")} className="btn btn-brand flex-1">
+            <button type="button" disabled={guardando || sinLugar} onClick={() => guardar(editando ? inicial!.estado : "publicado")} className="btn btn-brand flex-1 disabled:opacity-50">
               <CheckIcon className="size-5" /> {editando ? "Guardar cambios" : "Publicar"}
             </button>
           </>
@@ -595,8 +622,9 @@ export function CarForm({ inicial, duplicar = false }: { inicial?: Vehiculo; dup
   );
 }
 
-function Listo({ v, editando }: { v: Vehiculo; editando: boolean }) {
+function Listo({ v, editando, publicador }: { v: Vehiculo; editando: boolean; publicador: Publicador }) {
   const origen = useOrigen();
+  const r = rutas(publicador);
   const publicado = v.estado === "publicado";
   return (
     <div className="mx-auto max-w-lg text-center">
@@ -608,7 +636,7 @@ function Listo({ v, editando }: { v: Vehiculo; editando: boolean }) {
         {v.marca} {v.modelo} {v.anio}
       </p>
       <div className="mx-auto mt-5 max-w-xs text-left">
-        <CarCard v={v} agencia={AGENCIA_DEMO} />
+        <CarCard v={v} agencia={publicador.tipo === "agencia" ? publicador.agencia : undefined} />
       </div>
       <div className="mt-6 grid gap-2">
         {publicado && (
@@ -621,11 +649,13 @@ function Listo({ v, editando }: { v: Vehiculo; editando: boolean }) {
             </a>
           </>
         )}
-        <a href="/panel/autos/nuevo" className="btn btn-ghost">
-          Cargar otro auto
-        </a>
-        <Link href="/panel/autos" className="py-2 font-semibold text-brand">
-          Ir a mis autos
+        {publicador.tipo === "agencia" && (
+          <a href={r.nuevo} className="btn btn-ghost">
+            Cargar otro auto
+          </a>
+        )}
+        <Link href={r.lista} className="py-2 font-semibold text-brand">
+          {publicador.tipo === "agencia" ? "Ir a mis autos" : "Ir a mis avisos"}
         </Link>
       </div>
     </div>

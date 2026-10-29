@@ -19,7 +19,7 @@ export default function FaqPage() {
       <Faq items={COMPRADORES} />
       <p className="mt-6">
         ¿Tenés una agencia? Mirá las{" "}
-        <Link href="/para-agencias#preguntas" className="font-bold text-brand underline">
+        <Link href="/para-concesionarias#preguntas" className="font-bold text-brand underline">
           preguntas de agencias
         </Link>
         .

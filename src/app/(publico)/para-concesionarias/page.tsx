@@ -8,16 +8,16 @@ import { formatNumero } from "@/lib/format";
 import { linkWhatsApp } from "@/lib/whatsapp";
 
 export const metadata: Metadata = {
-  title: "Para agencias: publicá tu stock",
-  description: "Publicá el stock de tu agencia en CarVidriera, recibí consultas por WhatsApp y tené tu catálogo propio. Sin comisiones por venta.",
+  title: "Para concesionarias: publicá tu stock",
+  description: "Publicá el stock de tu concesionaria en CarVidriera, recibí consultas por WhatsApp y tené tu catálogo propio. Sin comisiones por venta.",
 };
 
 const BENEFICIOS = [
   { Icon: WhatsAppIcon, t: "Consultas directas por WhatsApp", d: "El comprador te escribe con el auto y el link ya en el mensaje. Sin intermediarios ni comisiones." },
-  { Icon: StoreIcon, t: "Tu catálogo propio", d: "Una página con todo tu stock para poner en la bio de Instagram y mandar por WhatsApp. Sin autos de otras agencias." },
+  { Icon: StoreIcon, t: "Tu catálogo propio", d: "Una página con todo tu stock para poner en la bio de Instagram y mandar por WhatsApp. Sin autos de otras concesionarias ni de particulares." },
   { Icon: ChartIcon, t: "Estadísticas de cada auto", d: "Cuántas personas vieron cada auto y cuántas te consultaron. Sabés qué funciona." },
   { Icon: PhoneIcon2, t: "Cargás un auto en minutos", d: "Desde el celular: sacás las fotos, completás los datos con un toque y listo." },
-  { Icon: QrIcon, t: "Código QR para tu agencia", d: "Imprimilo y pegalo en la vidriera o en los autos: escanean y ven todo tu stock." },
+  { Icon: QrIcon, t: "Código QR para tu concesionaria", d: "Imprimilo y pegalo en la vidriera o en los autos: escanean y ven todo tu stock." },
   { Icon: CheckIcon, t: "Sin comisiones por venta", d: "Pagás una suscripción mensual fija. La venta es tuya y se cierra con vos." },
 ];
 
@@ -26,24 +26,24 @@ const FAQ = [
   { p: "¿Quién carga los autos?", r: "Vos, desde el celular, en pocos minutos. Y la primera carga de todo tu stock la hacemos nosotros sin costo." },
   { p: "¿Cómo pago?", r: "Por Mercado Pago o transferencia, todos los meses." },
   { p: "¿Qué pasa si me atraso con el pago?", r: "Tenés 5 días de gracia. Si no se registra el pago, tus autos se pausan; cuando pagás, vuelven a publicarse solos, tal como estaban." },
-  { p: "¿Qué es el precio fundador?", r: "Las primeras agencias mantienen su precio mensual sin aumentos mientras sigan suscriptas. Un atraso no hace perder el beneficio: alcanza con ponerse al día." },
+  { p: "¿Qué es el precio fundador?", r: "Las primeras concesionarias mantienen su precio mensual sin aumentos mientras sigan suscriptas. Un atraso no hace perder el beneficio: alcanza con ponerse al día." },
   { p: "¿Puedo cambiar de plan?", r: "Sí. Si pasás a Pro, el cambio rige desde tu próximo pago. Si pasás a Básico, elegís qué 5 autos quedan publicados." },
   { p: "¿Puedo darme de baja?", r: "Cuando quieras, sin permanencia mínima. Al darte de baja se borran tus datos y tus autos." },
-  { p: "¿Qué necesito para estar verificado?", r: "Tu CUIT. Con eso aparecés como \"Agencia verificada\", que genera más confianza en los compradores." },
+  { p: "¿Qué necesito para estar verificado?", r: "Tu CUIT. Con eso aparecés como \"Concesionaria verificada\", que genera más confianza en los compradores." },
 ];
 
-export default function ParaAgenciasPage() {
-  const contacto = linkWhatsApp(portal.whatsapp, `Hola ${portal.name}, tengo una agencia y quiero conocer los planes.`);
+export default function ParaConcesionariasPage() {
+  const contacto = linkWhatsApp(portal.whatsapp, `Hola ${portal.name}, tengo una concesionaria y quiero conocer los planes.`);
   return (
     <>
       <section className="bg-ink text-white">
         <div className="mx-auto max-w-6xl px-4 py-10 sm:py-16">
-          <p className="text-sm font-bold uppercase tracking-wider text-brand-light">Para agencias y concesionarias</p>
+          <p className="text-sm font-bold uppercase tracking-wider text-brand-light">Para concesionarias y agencias</p>
           <h1 className="mt-2 max-w-2xl text-3xl font-extrabold leading-tight tracking-tight sm:text-5xl">Tu stock frente a los compradores de Catamarca</h1>
           <p className="mt-3 max-w-xl text-lg text-white/80">Recibí consultas reales por WhatsApp, tené tu catálogo propio para compartir y mirá cuántas personas ven cada auto.</p>
           <div className="mt-6 flex flex-col gap-2 sm:flex-row">
             <a href={contacto} target="_blank" rel="noopener" className="btn btn-wa min-h-12 text-base">
-              <WhatsAppIcon className="size-5" /> Quiero sumar mi agencia
+              <WhatsAppIcon className="size-5" /> Quiero sumar mi concesionaria
             </a>
             <Link href="#planes" className="btn min-h-12 border border-white/30 text-base text-white hover:bg-white/10">
               Ver planes
@@ -93,7 +93,7 @@ export default function ParaAgenciasPage() {
                     </li>
                   ))}
                 </ul>
-                <a href={linkWhatsApp(portal.whatsapp, `Hola ${portal.name}, me interesa el plan ${p.nombre} para mi agencia.`)} target="_blank" rel="noopener" className={`btn mt-6 w-full ${pro ? "btn-brand" : "btn-ghost"}`}>
+                <a href={linkWhatsApp(portal.whatsapp, `Hola ${portal.name}, me interesa el plan ${p.nombre} para mi concesionaria.`)} target="_blank" rel="noopener" className={`btn mt-6 w-full ${pro ? "btn-brand" : "btn-ghost"}`}>
                   Quiero el plan {p.nombre}
                 </a>
               </article>
@@ -102,7 +102,41 @@ export default function ParaAgenciasPage() {
         </div>
         <div className="mt-4 rounded-2xl bg-gold-bg p-4 text-gold">
           <p className="font-bold">Precio fundador</p>
-          <p className="text-sm">Las primeras agencias mantienen su precio sin aumentos mientras sigan suscriptas. La carga inicial de tu stock la hacemos nosotros, bonificada.</p>
+          <p className="text-sm">Las primeras concesionarias mantienen su precio sin aumentos mientras sigan suscriptas. La carga inicial de tu stock la hacemos nosotros, bonificada.</p>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pt-14" aria-labelledby="diferencias">
+        <h2 id="diferencias" className="text-2xl font-extrabold tracking-tight">
+          Particular o concesionaria
+        </h2>
+        <p className="mt-1 text-muted">Los particulares publican gratis hasta 2 autos. Una concesionaria tiene todo esto:</p>
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-line bg-surface">
+          <table className="w-full min-w-[34rem] text-left text-sm">
+            <thead>
+              <tr className="border-b border-line">
+                <th scope="col" className="p-3 font-bold"></th>
+                <th scope="col" className="p-3 font-bold">Particular</th>
+                <th scope="col" className="p-3 font-bold text-brand">Concesionaria</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                ["Autos publicados", "Hasta 2", "5 o ilimitados"],
+                ["Insignia", "Particular", "Concesionaria verificada"],
+                ["Catálogo propio con link y QR", "No", "Sí"],
+                ["Estadísticas", "Vistas y consultas", "Completas en Pro"],
+                ["Destacados", "Pagos, de a uno", "12 incluidos en Pro"],
+                ["Duración del aviso", "60 días", "Mientras estés al día"],
+              ].map(([k, p, c]) => (
+                <tr key={k} className="border-b border-line last:border-0">
+                  <th scope="row" className="p-3 font-semibold">{k}</th>
+                  <td className="p-3 text-muted">{p}</td>
+                  <td className="p-3 font-semibold">{c}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
@@ -122,7 +156,7 @@ export default function ParaAgenciasPage() {
 
       <section id="preguntas" className="mx-auto max-w-3xl scroll-mt-20 px-4 pt-14" aria-labelledby="titulo-preguntas">
         <h2 id="titulo-preguntas" className="text-2xl font-extrabold tracking-tight">
-          Preguntas de agencias
+          Preguntas de concesionarias
         </h2>
         <div className="mt-5">
           <Faq items={FAQ} />
@@ -130,7 +164,7 @@ export default function ParaAgenciasPage() {
         <p className="mt-4 text-sm text-muted">
           Ver las{" "}
           <Link href="/condiciones-agencias" className="font-semibold text-brand underline">
-            condiciones para agencias
+            condiciones para concesionarias
           </Link>
           .
         </p>
@@ -145,7 +179,7 @@ export default function ParaAgenciasPage() {
           </a>
           <p className="mt-4 text-sm">
             <Link href="/panel" className="font-semibold text-white underline">
-              Ver la demo del panel de agencia
+              Ver la demo del panel de concesionaria
             </Link>
           </p>
         </div>

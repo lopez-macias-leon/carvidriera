@@ -5,7 +5,7 @@ import { useOrigen } from "@/lib/cliente";
 import { compartir } from "@/lib/compartir";
 import { registrarEvento } from "@/lib/eventos";
 import type { Agencia, Vehiculo } from "@/lib/types";
-import { linkWhatsApp, mensajeConsulta, urlAviso } from "@/lib/whatsapp";
+import { contactoVendedor, linkWhatsApp, mensajeConsulta, urlAviso } from "@/lib/whatsapp";
 import { FavoriteButton } from "./favorite-button";
 import { ShareIcon, WhatsAppIcon } from "./icons";
 
@@ -20,9 +20,9 @@ export function TrackView({ id, tipo = "vista" }: { id: string; tipo?: "vista" |
 
 export { useOrigen } from "@/lib/cliente";
 
-export function WhatsAppButton({ v, agencia, className = "" }: { v: Vehiculo; agencia: Agencia; className?: string }) {
+export function WhatsAppButton({ v, agencia, className = "" }: { v: Vehiculo; agencia: Agencia | null; className?: string }) {
   const origen = useOrigen();
-  const href = linkWhatsApp(agencia.whatsapp, mensajeConsulta(v, agencia, `${urlAviso(v.slug, origen)}?ref=whatsapp`));
+  const href = linkWhatsApp(contactoVendedor(v, agencia).whatsapp, mensajeConsulta(v, agencia, `${urlAviso(v.slug, origen)}?ref=whatsapp`));
   return (
     <a href={href} target="_blank" rel="noopener" onClick={() => registrarEvento(v.codigo, "whatsapp")} className={`btn btn-wa ${className}`}>
       <WhatsAppIcon className="size-5" />
@@ -56,7 +56,7 @@ export function ShareButton({ v, titulo, conTexto = false }: { v: Vehiculo; titu
 }
 
 /** Barra fija abajo en celular: WhatsApp grande + compartir + favorito. */
-export function ContactBar({ v, agencia, titulo }: { v: Vehiculo; agencia: Agencia; titulo: string }) {
+export function ContactBar({ v, agencia, titulo }: { v: Vehiculo; agencia: Agencia | null; titulo: string }) {
   return (
     <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:hidden">
       <div className="mx-auto flex max-w-6xl items-center gap-2">

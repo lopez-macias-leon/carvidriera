@@ -9,7 +9,12 @@ import type { Agencia } from "@/lib/types";
 import { CloseIcon, FilterIcon } from "./icons";
 
 type Conteo = Record<string, number>;
-export type Conteos = Record<"tipo" | "condicion" | "marca" | "modelo" | "combustible" | "caja" | "localidad" | "agencia", Conteo>;
+export type Conteos = Record<"tipo" | "condicion" | "marca" | "modelo" | "combustible" | "caja" | "localidad" | "agencia" | "vendedor", Conteo>;
+
+const VENDEDORES = [
+  { value: "agencia" as const, label: "Concesionarias" },
+  { value: "particular" as const, label: "Particulares" },
+];
 
 const ANIO_ACTUAL = 2026;
 const ANIOS = Array.from({ length: 27 }, (_, i) => ANIO_ACTUAL - i);
@@ -122,6 +127,9 @@ function FiltrosForm({ filtros, conteos, agencias, aplicar }: { filtros: Filtros
   const modelos = filtros.marca ? (marcas[filtros.marca] ?? []) : [];
   return (
     <div>
+      <Grupo titulo="Vendedor">
+        <Chips opciones={VENDEDORES} seleccion={filtros.vendedor ? [filtros.vendedor] : []} conteo={conteos.vendedor} onToggle={(v) => aplicar({ vendedor: filtros.vendedor === v ? undefined : v, agencia: undefined })} />
+      </Grupo>
       <Grupo titulo="Tipo">
         <Chips opciones={tipos} seleccion={filtros.tipo ? [filtros.tipo] : []} conteo={conteos.tipo} onToggle={(v) => aplicar({ tipo: filtros.tipo === v ? undefined : v })} />
       </Grupo>
@@ -207,12 +215,12 @@ function FiltrosForm({ filtros, conteos, agencias, aplicar }: { filtros: Filtros
           onToggle={(v) => aplicar({ localidad: toggle(filtros.localidad, v) })}
         />
       </Grupo>
-      {agencias.length > 1 && (
-        <Grupo titulo="Agencia">
+      {agencias.length > 1 && filtros.vendedor !== "particular" && (
+        <Grupo titulo="Concesionaria">
           <label>
             <span className="sr-only">Agencia</span>
             <select className="field" value={filtros.agencia ?? ""} onChange={(e) => aplicar({ agencia: e.target.value || undefined })}>
-              <option value="">Todas las agencias</option>
+              <option value="">Todas las concesionarias</option>
               {agencias.map((a) => (
                 <option key={a.slug} value={a.slug}>
                   {a.nombre} ({conteos.agencia[a.slug] ?? 0})
@@ -258,7 +266,7 @@ export function Filters({ filtros, conteos, agencias, total, soloSheet = false }
     };
   }, [abierto]);
 
-  const limpiar = () => aplicar({ tipo: undefined, condicion: undefined, marca: undefined, modelo: undefined, moneda: undefined, precioMin: undefined, precioMax: undefined, anioMin: undefined, anioMax: undefined, kmMax: undefined, combustible: undefined, caja: undefined, localidad: undefined, agencia: undefined, permuta: undefined, financiacion: undefined });
+  const limpiar = () => aplicar({ vendedor: undefined, tipo: undefined, condicion: undefined, marca: undefined, modelo: undefined, moneda: undefined, precioMin: undefined, precioMax: undefined, anioMin: undefined, anioMax: undefined, kmMax: undefined, combustible: undefined, caja: undefined, localidad: undefined, agencia: undefined, permuta: undefined, financiacion: undefined });
 
   return (
     <>
@@ -320,7 +328,7 @@ export function SortSelect({ filtros }: { filtros: Filtros }) {
   return (
     <label className="relative">
       <span className="sr-only">Ordenar por</span>
-      <select value={filtros.orden} onChange={(e) => aplicar({ orden: e.target.value as Orden })} className="field min-h-11 w-44 py-2 font-semibold">
+      <select value={filtros.orden} onChange={(e) => aplicar({ orden: e.target.value as Orden })} className="field min-h-11 w-40 max-w-full py-2 font-semibold">
         {ORDENES.map((o) => (
           <option key={o.value} value={o.value}>
             {o.label}
@@ -350,7 +358,8 @@ export function ActiveChips({ filtros }: { filtros: Filtros }) {
   for (const c of filtros.combustible ?? []) chips.push({ label: combustibles.find((x) => x.value === c)?.label ?? c, quitar: { combustible: filtros.combustible!.filter((x) => x !== c) } });
   if (filtros.caja) chips.push({ label: filtros.caja === "manual" ? "Manual" : "Automática", quitar: { caja: undefined } });
   for (const l of filtros.localidad ?? []) chips.push({ label: localidadCorta(l), quitar: { localidad: filtros.localidad!.filter((x) => x !== l) } });
-  if (filtros.agencia) chips.push({ label: "Agencia", quitar: { agencia: undefined } });
+  if (filtros.agencia) chips.push({ label: "Concesionaria", quitar: { agencia: undefined } });
+  if (filtros.vendedor) chips.push({ label: filtros.vendedor === "agencia" ? "Concesionarias" : "Particulares", quitar: { vendedor: undefined } });
   if (filtros.permuta) chips.push({ label: "Permuta", quitar: { permuta: undefined } });
   if (filtros.financiacion) chips.push({ label: "Financiación", quitar: { financiacion: undefined } });
   if (!chips.length) return null;

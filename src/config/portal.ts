@@ -4,7 +4,7 @@
  */
 export const portal = {
   name: "CarVidriera",
-  tagline: "Autos de agencias de Catamarca",
+  tagline: "Autos usados y 0 km de Catamarca",
   siteUrl: "https://[dominio].com.ar",
   city: "San Fernando del Valle de Catamarca",
   province: "Catamarca",

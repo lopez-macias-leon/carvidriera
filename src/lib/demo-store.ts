@@ -49,7 +49,7 @@ async function tx<T>(modo: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
 export async function listarLocales(): Promise<Vehiculo[]> {
   try {
     const todos = await tx<Vehiculo[]>("readonly", (s) => s.getAll());
-    return todos.filter((v) => v.codigo !== BORRADOR).sort((a, b) => b.publicado.localeCompare(a.publicado));
+    return todos.filter((v) => !v.codigo.startsWith(BORRADOR)).sort((a, b) => b.publicado.localeCompare(a.publicado));
   } catch {
     return [];
   }
@@ -95,24 +95,24 @@ export function cambiarEstadoDemo(codigo: string, estado: EstadoVehiculo) {
 
 /** Borrador del asistente de carga (con sus fotos): si se corta o entra una llamada, no se pierde. */
 const BORRADOR = "__borrador__";
-export async function leerBorrador<T>(): Promise<T | null> {
+export async function leerBorrador<T>(clave: string): Promise<T | null> {
   try {
-    const r = await tx<{ datos: T } | undefined>("readonly", (s) => s.get(BORRADOR));
+    const r = await tx<{ datos: T } | undefined>("readonly", (s) => s.get(BORRADOR + clave));
     return r?.datos ?? null;
   } catch {
     return null;
   }
 }
-export async function guardarBorrador(datos: unknown) {
+export async function guardarBorrador(clave: string, datos: unknown) {
   try {
-    await tx("readwrite", (s) => s.put({ codigo: BORRADOR, datos }));
+    await tx("readwrite", (s) => s.put({ codigo: BORRADOR + clave, datos }));
   } catch {
     /* sin espacio: el borrador no se guarda */
   }
 }
-export async function borrarBorrador() {
+export async function borrarBorrador(clave: string) {
   try {
-    await tx("readwrite", (s) => s.delete(BORRADOR));
+    await tx("readwrite", (s) => s.delete(BORRADOR + clave));
   } catch {
     /* nada */
   }

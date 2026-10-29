@@ -30,10 +30,54 @@ export type Agencia = {
 
 export type Foto = { src: string; alt?: string };
 
+export type TipoVendedor = "agencia" | "particular";
+
+/** Persona que publica su propio auto (gratis, hasta 2 a la vez). */
+export type Particular = {
+  id: string;
+  /** Nombre visible: nombre y la inicial del apellido. */
+  nombre: string;
+  /** Formato internacional sin "+". Vacío en la demo. */
+  whatsapp: string;
+  localidad: string;
+};
+
+export type Especialidad =
+  | "mecanica"
+  | "service"
+  | "electricidad"
+  | "inyeccion"
+  | "diesel"
+  | "chapa_pintura"
+  | "gomeria"
+  | "tren_delantero"
+  | "aire"
+  | "precompra";
+
+/** Taller mecánico del apartado de mecánicos (suscripción mensual). */
+export type Taller = {
+  slug: string;
+  nombre: string;
+  descripcion: string;
+  direccion: string;
+  localidad: string;
+  whatsapp: string;
+  horarios: Horario;
+  especialidades: Especialidad[];
+  verificado: boolean;
+  color: string;
+  lat?: number;
+  lng?: number;
+};
+
 export type Vehiculo = {
   codigo: string;
   slug: string;
+  vendedor: TipoVendedor;
+  /** Slug de la agencia; vacío si vende un particular. */
   agencia: string;
+  /** Datos del particular, si vende un particular. */
+  particular?: Particular;
   tipo: Tipo;
   carroceria: Carroceria;
   condicion: Condicion;
@@ -58,7 +102,13 @@ export type Vehiculo = {
   localidad: string;
   estado: EstadoVehiculo;
   destacado: boolean;
+  /** Fin del destacado pago de un particular (ISO). */
+  destacadoHasta?: string;
   publicado: string;
+  /** Vencimiento del aviso de particular (ISO). */
+  vence?: string;
+  /** Particular con la mejora "Aviso completo" (12 fotos y 90 días). */
+  completo?: boolean;
   fotos: Foto[];
   /** Cargado desde el panel en este teléfono (demo). */
   local?: boolean;
