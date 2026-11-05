@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CarCard, CarGrid } from "@/components/car-card";
+import { ResultadosConLocales } from "@/components/con-locales";
 import { ActiveChips, Filters, SortSelect } from "@/components/filters";
 import { SearchBox } from "@/components/search-box";
 import { tipos } from "@/data/catalogos";
@@ -33,7 +33,6 @@ export async function generateMetadata({ searchParams }: PageProps<"/autos">): P
 export default async function AutosPage({ searchParams }: PageProps<"/autos">) {
   const filtros = leerFiltros(await searchParams);
   const [{ items, total, hayMas, conteos }, agencias] = await Promise.all([buscarVehiculos(filtros), getAgencias()]);
-  const porSlug = Object.fromEntries(agencias.map((a) => [a.slug, a]));
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-5">
@@ -57,34 +56,13 @@ export default async function AutosPage({ searchParams }: PageProps<"/autos">) {
             </div>
           </div>
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <p className="mr-2 text-sm font-semibold text-muted" aria-live="polite">
-              {total === 1 ? "1 auto" : `${total} autos`}
-            </p>
+          <ResultadosConLocales items={items} total={total} filtros={filtros} agencias={agencias}>
             <ActiveChips filtros={filtros} />
-          </div>
-
-          {items.length ? (
-            <div className="mt-4">
-              <CarGrid conLateral>
-                {items.map((v, i) => (
-                  <CarCard key={v.codigo} v={v} agencia={porSlug[v.agencia]} eager={i < 2} />
-                ))}
-              </CarGrid>
-              {hayMas && (
-                <div className="mt-8 text-center">
-                  <Link href={`/autos?${filtrosAQuery({ ...filtros, pagina: filtros.pagina + 1 })}`} scroll={false} className="btn btn-ghost">
-                    Ver más autos
-                  </Link>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="mt-6 rounded-2xl border border-dashed border-line bg-surface p-8 text-center">
-              <p className="text-lg font-bold">No encontramos autos con esos filtros</p>
-              <p className="mt-1 text-muted">Probá quitar algún filtro o buscar otra marca.</p>
-              <Link href="/autos" className="btn btn-brand mt-4">
-                Ver todos los autos
+          </ResultadosConLocales>
+          {hayMas && (
+            <div className="mt-8 text-center">
+              <Link href={`/autos?${filtrosAQuery({ ...filtros, pagina: filtros.pagina + 1 })}`} scroll={false} className="btn btn-ghost">
+                Ver más autos
               </Link>
             </div>
           )}

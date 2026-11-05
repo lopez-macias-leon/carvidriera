@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { AgencyAvatar } from "@/components/agency-avatar";
-import { CarCard, CarGrid } from "@/components/car-card";
+import { DestacadosConLocales, RecientesConLocales } from "@/components/con-locales";
 import { CarIcon, ChevronRight, PickupIcon, SearchIcon, SparkIcon, SuvIcon, TagIcon, VerifiedIcon, WhatsAppIcon, WrenchIcon } from "@/components/icons";
 import { TallerCard } from "@/components/talleres-list";
 import { SearchBox } from "@/components/search-box";
@@ -30,7 +30,6 @@ export default async function HomePage() {
     getTalleres(),
     marcasConAutos(),
   ]);
-  const nombreAgencia = Object.fromEntries(agencias.map((a) => [a.slug, a]));
 
   return (
     <>
@@ -76,22 +75,7 @@ export default async function HomePage() {
       </section>
 
       {/* Destacados */}
-      {destacados.length > 0 && (
-        <section className="mx-auto mt-12 max-w-6xl px-4" aria-labelledby="destacados">
-          <div className="flex items-end justify-between gap-4">
-            <h2 id="destacados" className="text-2xl font-extrabold tracking-tight">
-              Destacados
-            </h2>
-          </div>
-          <ul className="scroll-row -mx-4 mt-4 flex gap-4 overflow-x-auto px-4 pb-2">
-            {destacados.map((v) => (
-              <li key={v.codigo} className="w-[78%] shrink-0 sm:w-[44%] lg:w-[31%]">
-                <CarCard v={v} agencia={nombreAgencia[v.agencia]} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <DestacadosConLocales items={destacados} agencias={agencias} />
 
       {/* Recién publicados */}
       <section className="mx-auto mt-12 max-w-6xl px-4" aria-labelledby="recientes">
@@ -104,11 +88,7 @@ export default async function HomePage() {
           </Link>
         </div>
         <div className="mt-4">
-          <CarGrid>
-            {recientes.map((v, i) => (
-              <CarCard key={v.codigo} v={v} agencia={nombreAgencia[v.agencia]} eager={i < 2} />
-            ))}
-          </CarGrid>
+          <RecientesConLocales items={recientes} agencias={agencias} cantidad={8} />
         </div>
         <div className="mt-6 text-center">
           <Link href="/autos" className="btn btn-ghost">

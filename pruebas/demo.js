@@ -81,6 +81,11 @@ let page;
   await page.getByRole("heading", { name: "Peugeot 208" }).waitFor();
   ok(await visible(page.getByText("Único dueño")), "La ficha del auto nuevo se ve en el portal");
 
+  await page.goto(`${BASE}/`);
+  ok(await visible(page.getByRole("region", { name: "Recién publicados" }).getByRole("link", { name: "Peugeot 208" })), "El auto publicado aparece en la portada, en Recién publicados");
+  await page.goto(`${BASE}/autos?marca=Peugeot`);
+  ok(await visible(page.getByRole("link", { name: "Peugeot 208" })), "El auto publicado aparece en el listado con filtros");
+
   await page.goto(`${BASE}/agencia/automotores-demo`);
   await page.getByRole("link", { name: "Peugeot 208" }).first().waitFor();
   ok(true, "El auto nuevo aparece en el catálogo de la agencia");
@@ -161,12 +166,17 @@ let page;
   await page.getByRole("button", { name: "Publicar" }).click();
   await page.getByRole("heading", { name: "Tu aviso está en revisión" }).waitFor();
   ok(await visible(page.getByText(/Motivo: Primer aviso de la cuenta/)), "Primer aviso de un particular queda en revisión");
+  await page.goto(`${BASE}/autos?vendedor=particular&marca=Fiat`);
+  await page.getByRole("link", { name: "Fiat Argo" }).waitFor();
+  ok((await page.getByRole("link", { name: "Fiat Cronos" }).count()) === 0, "Un aviso en revisión no aparece en el portal");
   await admin();
   const enRevision = page.getByRole("listitem").filter({ hasText: "Fiat Cronos" });
   await enRevision.getByRole("button", { name: "Aprobar", exact: true }).click();
   await page.getByText("No hay avisos esperando revisión.").waitFor();
   await page.goto(`${BASE}/mi-cuenta`);
   ok(await visible(page.getByRole("listitem").filter({ hasText: "Fiat Cronos 2018" }).getByText("Publicado", { exact: true })), "El administrador lo aprueba y se publica");
+  await page.goto(`${BASE}/autos?vendedor=particular&marca=Fiat`);
+  ok(await visible(page.getByRole("link", { name: "Fiat Cronos" })), "Una vez aprobado, aparece en el listado");
 
   // Con la cuenta aprobada, el segundo sale al instante. La foto pasa por el detector del teléfono.
   await publicarParticular("Chevrolet", "Onix", { foto: true });

@@ -12,6 +12,7 @@ import { comprimirFoto } from "@/lib/imagenes";
 import { normalizar } from "@/lib/filtros";
 import { revisarNumeros, revisarTexto, textoMotivo } from "@/lib/moderacion";
 import { DIAS_AVISO_PARTICULAR, FOTOS_PARTICULAR } from "@/config/planes";
+import { portal } from "@/config/portal";
 import type { Agencia, Caja, Carroceria, Combustible, Condicion, Foto, Moneda, Particular, Tipo, Vehiculo } from "@/lib/types";
 import { linkWhatsApp, mensajeCompartirAuto, urlAviso } from "@/lib/whatsapp";
 import { CarCard } from "./car-card";
@@ -773,6 +774,12 @@ function Listo({ v, editando, publicador }: { v: Vehiculo; editando: boolean; pu
         <div className="mt-3 rounded-xl bg-soft p-3 text-left text-sm">
           <p>Lo revisamos antes de publicarlo para cuidar a los compradores. Vas a verlo como publicado en Mis avisos apenas lo aprobemos.</p>
           <p className="mt-2 font-semibold">Motivo: {v.motivosRevision?.join(" · ")}</p>
+          <p className="mt-2 text-muted">Mientras tanto no aparece en la portada ni en el listado.</p>
+          {portal.demo && (
+            <Link href="/admin" className="btn btn-brand mt-3 w-full">
+              Demo: aprobarlo como administrador
+            </Link>
+          )}
         </div>
       )}
       <p className="mt-1 text-muted">
