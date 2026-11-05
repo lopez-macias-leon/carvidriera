@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "prueba": "node pruebas/demo.js",
-    "prueba:moderacion": "tsx pruebas/moderacion.ts"
+    "prueba:moderacion": "tsx pruebas/moderacion.ts",
+    "prueba:datos": "tsx pruebas/datos.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

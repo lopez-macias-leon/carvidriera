@@ -57,7 +57,7 @@ npm run build && npm start   # versión de producción
 |---|---|
 | Nombre, dominio, WhatsApp y email del portal, modo demo | `src/config/portal.ts` |
 | Planes, mejoras para particulares, plan de talleres y tope de autos | `src/config/planes.ts` |
-| Marcas, modelos, localidades, colores | `src/data/catalogos.ts` |
+| Marcas, modelos (y los más vendidos de cada marca), localidades, colores | `src/data/catalogos.ts` |
 | Concesionarias, particulares, autos y talleres de demostración | `src/data/demo.ts` |
 | Colores y estilos | `src/app/globals.css` |
 | Textos legales | `src/content/legales.ts` (sale de `docs/LEGALES-BORRADOR.md`) |
@@ -72,6 +72,7 @@ Prueba de punta a punta en tamaño celular (búsqueda, filtros, ficha, WhatsApp,
 npm run build && npx next start -p 3200
 npm run prueba        # en otra terminal; usa el Playwright instalado en el sistema
 npm run prueba:moderacion   # reglas de texto y números, sin navegador
+npm run prueba:datos        # coherencia del catálogo de marcas y modelos
 ```
 
 ## Documentos

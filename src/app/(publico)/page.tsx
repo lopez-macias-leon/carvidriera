@@ -4,8 +4,7 @@ import { CarCard, CarGrid } from "@/components/car-card";
 import { CarIcon, ChevronRight, PickupIcon, SearchIcon, SparkIcon, SuvIcon, TagIcon, VerifiedIcon, WhatsAppIcon, WrenchIcon } from "@/components/icons";
 import { TallerCard } from "@/components/talleres-list";
 import { SearchBox } from "@/components/search-box";
-import { marcas } from "@/data/catalogos";
-import { contarPorAgencia, contarPorTipo, getAgencias, getDestacados, getRecientes, getTalleres } from "@/lib/catalog";
+import { contarPorAgencia, contarPorTipo, getAgencias, getDestacados, getRecientes, getTalleres, marcasConAutos } from "@/lib/catalog";
 import { localidadCorta } from "@/lib/format";
 
 const ACCESOS = [
@@ -22,13 +21,14 @@ const PASOS = [
 ];
 
 export default async function HomePage() {
-  const [recientes, destacados, agencias, porTipo, porAgencia, talleres] = await Promise.all([
+  const [recientes, destacados, agencias, porTipo, porAgencia, talleres, porMarca] = await Promise.all([
     getRecientes(8),
     getDestacados(),
     getAgencias(),
     contarPorTipo(),
     contarPorAgencia(),
     getTalleres(),
+    marcasConAutos(),
   ]);
   const nombreAgencia = Object.fromEntries(agencias.map((a) => [a.slug, a]));
 
@@ -123,10 +123,10 @@ export default async function HomePage() {
           Buscar por marca
         </h2>
         <ul className="mt-4 flex flex-wrap gap-2">
-          {Object.keys(marcas).map((m) => (
-            <li key={m}>
-              <Link href={`/autos?marca=${encodeURIComponent(m)}`} className="chip hover:border-brand">
-                {m}
+          {porMarca.map(({ marca, cantidad }) => (
+            <li key={marca}>
+              <Link href={`/autos?marca=${encodeURIComponent(marca)}`} className="chip hover:border-brand">
+                {marca} <span className="text-muted">{cantidad}</span>
               </Link>
             </li>
           ))}

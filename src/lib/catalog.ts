@@ -79,6 +79,13 @@ export async function contarPorAgencia() {
   return conteo;
 }
 
+/** Marcas con autos publicados, de la que más tiene a la que menos. */
+export async function marcasConAutos() {
+  const conteo = new Map<string, number>();
+  for (const v of await getVehiculosVisibles()) conteo.set(v.marca, (conteo.get(v.marca) ?? 0) + 1);
+  return [...conteo].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([marca, cantidad]) => ({ marca, cantidad }));
+}
+
 export async function contarPorTipo() {
   const visibles = await getVehiculosVisibles();
   return {

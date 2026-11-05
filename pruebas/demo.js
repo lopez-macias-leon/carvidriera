@@ -143,6 +143,19 @@ let page;
     await page.getByRole("heading", { name: "Moderación" }).waitFor();
   };
 
+  // Catálogo amplio: populares primero, buscador para el resto y modelo escrito a mano.
+  await page.goto(`${BASE}/mi-cuenta/publicar`);
+  await page.getByRole("button", { name: /Seguir sin fotos/ }).click();
+  await page.getByLabel("Otra marca").selectOption("Chery");
+  await page.getByPlaceholder(/Buscá otro modelo de Chery/).fill("tiggo");
+  const tiggos = await page.getByRole("radio", { name: /^Tiggo/ }).count();
+  ok(tiggos === 5, `Buscar "tiggo" en Chery muestra ${tiggos} modelos`);
+  await page.getByPlaceholder(/Buscá otro modelo de Chery/).fill("Tiggo 9 Pro");
+  await page.getByRole("button", { name: /Usar “Tiggo 9 Pro”/ }).click();
+  ok(await visible(page.getByText("Modelo elegido:")), "Un modelo que no está en la lista se puede escribir a mano");
+  await page.getByRole("radio", { name: "Toyota" }).click();
+  ok((await page.getByRole("radio", { name: "Hilux" }).count()) === 1 && (await page.getByRole("radio", { name: "86" }).count()) === 0, "Toyota muestra primero sus modelos más vendidos");
+
   // Moderación: el primer aviso de una cuenta nueva pasa por el administrador.
   await publicarParticular("Fiat", "Cronos");
   await page.getByRole("button", { name: "Publicar" }).click();

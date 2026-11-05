@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
-import { cajas, colores, colorHex, combustibles, condiciones, frasesDescripcion, marcas, tipos } from "@/data/catalogos";
+import { cajas, colores, colorHex, combustibles, condiciones, frasesDescripcion, marcas, modelosPopulares, tipos } from "@/data/catalogos";
 import { slugVehiculo, vehiculosDemo } from "@/data/demo";
 import { useOrigen } from "@/lib/cliente";
 import { borrarBorrador, guardarBorrador, guardarLocal, leerBorrador, nuevoCodigo } from "@/lib/demo-store";
 import { formatKm, formatNumero, formatPrecio, labelCaja, labelCombustible } from "@/lib/format";
 import { precargarDetector, revisarFoto } from "@/lib/detector-fotos";
 import { comprimirFoto } from "@/lib/imagenes";
+import { normalizar } from "@/lib/filtros";
 import { revisarNumeros, revisarTexto, textoMotivo } from "@/lib/moderacion";
 import { DIAS_AVISO_PARTICULAR, FOTOS_PARTICULAR } from "@/config/planes";
 import type { Agencia, Caja, Carroceria, Combustible, Condicion, Foto, Moneda, Particular, Tipo, Vehiculo } from "@/lib/types";
@@ -318,8 +319,93 @@ function PasoFotos({ fotos, setFotos, max, onSinRevisar }: { fotos: Foto[]; setF
 
 /* ---------- Paso 2: el auto ---------- */
 
+/** Lo escrito a mano: sin símbolos raros, sin espacios de más y con un largo razonable. */
+const limpiarNombre = (s: string) =>
+  s
+    .replace(/[^\p{L}\p{N} .\-+!]/gu, "")
+    .replace(/\s+/g, " ")
+    .slice(0, 30);
+
+/** Marca y modelo están en el catálogo (si no, el aviso de un particular pasa por revisión). */
+export const enCatalogo = (marca: string, modelo: string) => !!marcas[marca]?.includes(modelo);
+
+function SelectorMarca({ marca, onChange }: { marca: string; onChange: (m: string) => void }) {
+  const [manual, setManual] = useState<boolean>(!!marca && !(marca in marcas));
+  return (
+    <div>
+      <Opciones label="Marca" opciones={MARCAS_POPULARES.map((m) => ({ value: m, label: m }))} valor={manual ? "" : marca} onChange={(m) => (setManual(false), onChange(m))} />
+      <label className="mt-2 block">
+        <span className="sr-only">Otra marca</span>
+        <select
+          className="field"
+          value={manual ? "__manual__" : MARCAS_POPULARES.includes(marca) ? "" : marca}
+          onChange={(e) => {
+            const v = e.target.value;
+            setManual(v === "__manual__");
+            onChange(v === "__manual__" ? "" : v);
+          }}
+        >
+          <option value="">Otra marca…</option>
+          {Object.keys(marcas).map((m) => (
+            <option key={m}>{m}</option>
+          ))}
+          <option value="__manual__">Mi marca no está en la lista</option>
+        </select>
+      </label>
+      {manual && (
+        <label className="mt-2 block">
+          <span className="text-sm font-bold">Escribí la marca</span>
+          <input className="field mt-1" value={marca} onChange={(e) => onChange(limpiarNombre(e.target.value))} placeholder="Ej. Lifan" autoComplete="off" />
+          <span className="mt-1 block text-xs text-muted">Lo revisamos antes de publicar el aviso.</span>
+        </label>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Modelos: primero los más vendidos de la marca; el resto se busca escribiendo.
+ * Si no está, se puede usar lo escrito (el aviso de un particular pasa por revisión).
+ */
+function SelectorModelo({ marca, modelo, onChange }: { marca: string; modelo: string; onChange: (m: string) => void }) {
+  const todos = marcas[marca] ?? [];
+  const populares = modelosPopulares[marca]?.length ? modelosPopulares[marca] : todos.slice(0, 8);
+  const [busqueda, setBusqueda] = useState("");
+  const q = normalizar(busqueda.trim());
+  const encontrados = q ? todos.filter((m) => normalizar(m).includes(q)).slice(0, 12) : [];
+  // El elegido se ve siempre, aunque no esté entre los populares.
+  const visibles = q ? encontrados : modelo && todos.includes(modelo) && !populares.includes(modelo) ? [...populares, modelo] : populares;
+  const escrito = limpiarNombre(busqueda).trim();
+  return (
+    <div>
+      {visibles.length > 0 && <Opciones label="Modelo" opciones={visibles.map((m) => ({ value: m, label: m }))} valor={modelo} onChange={(m) => (setBusqueda(""), onChange(m))} />}
+      {!visibles.length && <p className="mb-2 font-bold">Modelo</p>}
+      <label className="mt-2 block">
+        <span className="sr-only">{todos.length ? "Buscar otro modelo" : "Escribí el modelo"}</span>
+        <input
+          className="field"
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder={todos.length ? `Buscá otro modelo de ${marca} (hay ${todos.length})` : "Escribí el modelo"}
+          autoComplete="off"
+        />
+      </label>
+      {escrito.length >= 2 && !encontrados.length && (
+        <button type="button" onClick={() => (onChange(escrito), setBusqueda(""))} className="mt-2 w-full rounded-xl border border-dashed border-brand px-3 py-2.5 text-left text-sm font-semibold text-brand">
+          Usar “{escrito}”{todos.length ? ": no está en la lista, lo revisamos antes de publicar" : ""}
+        </button>
+      )}
+      {modelo && !todos.includes(modelo) && (
+        <p className="mt-2 text-sm">
+          Modelo elegido: <strong>{modelo}</strong>
+        </p>
+      )}
+    </div>
+  );
+}
+
 function PasoAuto({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) {
-  const modelos = d.marca ? (marcas[d.marca] ?? []) : [];
+  const marcaEscrita = !!d.marca && !(d.marca in marcas);
   const versiones = [...new Set(vehiculosDemo.filter((v) => v.marca === d.marca && v.modelo === d.modelo).map((v) => v.version))];
   const kmNum = Number(d.km);
   return (
@@ -328,20 +414,8 @@ function PasoAuto({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) {
       <Opciones label="Condición" opciones={condiciones} valor={d.condicion} onChange={(condicion) => set({ condicion, ...(condicion === "0km" ? { km: "0", anio: 2026 } : { km: d.km === "0" ? "" : d.km }) })} columnas />
       <Opciones label="Tipo" opciones={tipos.map((t) => ({ value: t.value, label: t.label }))} valor={d.tipo} onChange={(tipo) => set({ tipo })} columnas />
 
-      <div>
-        <Opciones label="Marca" opciones={MARCAS_POPULARES.map((m) => ({ value: m, label: m }))} valor={d.marca} onChange={(marca) => set({ marca, modelo: "" })} />
-        <label className="mt-2 block">
-          <span className="sr-only">Otra marca</span>
-          <select className="field" value={MARCAS_POPULARES.includes(d.marca) ? "" : d.marca} onChange={(e) => set({ marca: e.target.value, modelo: "" })}>
-            <option value="">Otra marca…</option>
-            {Object.keys(marcas).map((m) => (
-              <option key={m}>{m}</option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      {d.marca && <Opciones label="Modelo" opciones={modelos.map((m) => ({ value: m, label: m }))} valor={d.modelo} onChange={(modelo) => set({ modelo })} />}
+      <SelectorMarca marca={d.marca} onChange={(marca) => set({ marca, modelo: "" })} />
+      {(d.marca || marcaEscrita) && <SelectorModelo key={d.marca} marca={d.marca} modelo={d.modelo} onChange={(modelo) => set({ modelo })} />}
 
       <label className="block">
         <span className="font-bold">Versión</span>
@@ -473,8 +547,8 @@ const faltantes = (d: Datos, paso: number) => {
   const f: string[] = [];
   if (paso === 1) {
     if (!d.tipo) f.push("tipo");
-    if (!d.marca) f.push("marca");
-    if (!d.modelo) f.push("modelo");
+    if (d.marca.trim().length < 2) f.push("marca");
+    if (d.modelo.trim().length < 1) f.push("modelo");
     if (!d.anio) f.push("año");
     if (d.condicion === "usado" && !d.km) f.push("kilómetros");
     if (!d.combustible) f.push("combustible");
@@ -541,7 +615,8 @@ export function CarForm({ inicial, duplicar = false, publicador }: { inicial?: V
     return [
       ...(publicador.cuentaAprobada ? [] : ["Primer aviso de la cuenta"]),
       ...(d.fotosSinRevisar ? ["Fotos sin revisar automáticamente"] : []),
-      ...revisarTexto(`${d.version} ${d.descripcion}`).map((m) => textoMotivo[m]),
+      ...(enCatalogo(d.marca, d.modelo) ? [] : ["Marca o modelo fuera de la lista"]),
+      ...revisarTexto(`${d.marca} ${d.modelo} ${d.version} ${d.descripcion}`).map((m) => textoMotivo[m]),
       ...revisarNumeros(v),
     ];
   };
