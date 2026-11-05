@@ -48,9 +48,19 @@ El botón "Consultar por WhatsApp" abre una conversación con la agencia a trav�
 
 Cualquier usuario puede denunciar un aviso que considere falso, engañoso, ya vendido o sospechoso. El Portal revisará la denuncia y podrá pausar o bloquear el aviso, sin obligación de informar el resultado.
 
-### 1.7. Uso permitido
+### 1.7. Uso permitido, contenido prohibido y sanciones
 
-Está prohibido: copiar o extraer masivamente el contenido del Portal por medios automatizados; usar los datos de contacto de las agencias para fines distintos a consultar por sus vehículos; intentar acceder a áreas restringidas; o usar el Portal para actividades ilícitas.
+Está prohibido: copiar o extraer masivamente el contenido del Portal por medios automatizados; usar los datos de contacto de los vendedores para fines distintos a consultar por sus vehículos; intentar acceder a áreas restringidas; o usar el Portal para actividades ilícitas.
+
+En los avisos está prohibido publicar:
+- fotos que no sean del vehículo ofrecido, o de un vehículo que no se tiene derecho a vender;
+- contenido sexual, violento, discriminatorio, ofensivo o ilegal;
+- teléfonos, links, emails o redes sociales en el texto del aviso (el contacto se hace con el botón de WhatsApp);
+- datos falsos o engañosos sobre el vehículo, su precio o su documentación.
+
+Para cuidar a los compradores, el Portal revisa las publicaciones con herramientas automáticas y en forma manual. Un aviso puede quedar **en revisión** antes de publicarse (por ejemplo, el primero de cada cuenta de particular) y puede ser **rechazado** con su motivo.
+
+Ante un incumplimiento, el Portal puede rechazar o retirar el aviso y, si el contenido es grave o se repite, **bloquear la cuenta** y los datos de contacto asociados, sin derecho a reintegro de mejoras pagas sobre ese aviso. El contenido ilegal se informa a las autoridades cuando corresponda.
 
 ### 1.8. Propiedad intelectual
 

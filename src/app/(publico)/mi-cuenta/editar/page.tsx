@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState } from "react";
 import { CarForm } from "@/components/car-form";
 import { obtenerLocal } from "@/lib/demo-store";
 import { PARTICULAR_DEMO } from "@/lib/mi-cuenta";
+import { cuentaAprobada } from "@/lib/moderacion-demo";
 import type { Vehiculo } from "@/lib/types";
 
 function Editar() {
@@ -24,7 +25,7 @@ function Editar() {
         </Link>
       </div>
     );
-  return <CarForm inicial={v} publicador={{ tipo: "particular", particular: PARTICULAR_DEMO, topeAlcanzado: false }} />;
+  return <CarForm inicial={v} publicador={{ tipo: "particular", particular: PARTICULAR_DEMO, topeAlcanzado: false, cuentaAprobada: cuentaAprobada(PARTICULAR_DEMO.id) }} />;
 }
 
 export default function EditarParticularPage() {

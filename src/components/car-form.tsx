@@ -7,17 +7,22 @@ import { slugVehiculo, vehiculosDemo } from "@/data/demo";
 import { useOrigen } from "@/lib/cliente";
 import { borrarBorrador, guardarBorrador, guardarLocal, leerBorrador, nuevoCodigo } from "@/lib/demo-store";
 import { formatKm, formatNumero, formatPrecio, labelCaja, labelCombustible } from "@/lib/format";
+import { precargarDetector, revisarFoto } from "@/lib/detector-fotos";
 import { comprimirFoto } from "@/lib/imagenes";
+import { revisarNumeros, revisarTexto, textoMotivo } from "@/lib/moderacion";
 import { DIAS_AVISO_PARTICULAR, FOTOS_PARTICULAR } from "@/config/planes";
 import type { Agencia, Caja, Carroceria, Combustible, Condicion, Foto, Moneda, Particular, Tipo, Vehiculo } from "@/lib/types";
 import { linkWhatsApp, mensajeCompartirAuto, urlAviso } from "@/lib/whatsapp";
 import { CarCard } from "./car-card";
-import { CameraIcon, CheckIcon, ChevronLeft, ChevronRight, CloseIcon, WhatsAppIcon } from "./icons";
+import { CameraIcon, CheckIcon, ClockIcon, ChevronLeft, ChevronRight, CloseIcon, WhatsAppIcon } from "./icons";
 
 const MAX_FOTOS = 12;
 
 /** Quién publica: una concesionaria (desde su panel) o un particular (desde "Mi cuenta"). */
-export type Publicador = { tipo: "agencia"; agencia: Agencia } | { tipo: "particular"; particular: Particular; topeAlcanzado: boolean };
+export type Publicador =
+  | { tipo: "agencia"; agencia: Agencia }
+  /** `cuentaAprobada`: ya tuvo un aviso aprobado, así que no pasa por revisión solo por ser nueva. */
+  | { tipo: "particular"; particular: Particular; topeAlcanzado: boolean; cuentaAprobada: boolean };
 
 const rutas = (p: Publicador) => (p.tipo === "agencia" ? { nuevo: "/panel/autos/nuevo", lista: "/panel/autos" } : { nuevo: "/mi-cuenta/publicar", lista: "/mi-cuenta" });
 const sumarDias = (iso: string, dias: number) => new Date(new Date(iso).getTime() + dias * 86400000).toISOString();
@@ -27,6 +32,8 @@ const PASOS = ["Fotos", "El auto", "Precio", "Revisar"];
 
 type Datos = {
   fotos: Foto[];
+  /** Alguna foto no se pudo revisar en el teléfono (el detector no cargó): el aviso va a revisión. */
+  fotosSinRevisar: boolean;
   condicion: Condicion;
   tipo: Tipo | "";
   marca: string;
@@ -50,6 +57,7 @@ type Datos = {
 
 const VACIO: Datos = {
   fotos: [],
+  fotosSinRevisar: false,
   condicion: "usado",
   tipo: "",
   marca: "",
@@ -76,6 +84,7 @@ const CARROCERIA: Record<Tipo, Carroceria> = { auto: "sedan", camioneta: "pickup
 function desdeVehiculo(v: Vehiculo, duplicar: boolean): Datos {
   return {
     fotos: duplicar ? [] : v.fotos,
+    fotosSinRevisar: false,
     condicion: v.condicion,
     tipo: v.tipo,
     marca: v.marca,
@@ -195,14 +204,16 @@ function Interruptor({ label, ayuda, valor, onChange }: { label: string; ayuda?:
 
 /* ---------- Paso 1: fotos ---------- */
 
-function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (prev: Foto[]) => Foto[]) => void; max: number }) {
+function PasoFotos({ fotos, setFotos, max, onSinRevisar }: { fotos: Foto[]; setFotos: (f: (prev: Foto[]) => Foto[]) => void; max: number; onSinRevisar: () => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [procesando, setProcesando] = useState(0);
   const [error, setError] = useState("");
+  const [rechazadas, setRechazadas] = useState<string[]>([]);
 
   const agregar = async (files: FileList | null) => {
     if (!files?.length) return;
     setError("");
+    setRechazadas([]);
     const lugar = max - fotos.length;
     const lista = Array.from(files).slice(0, lugar);
     if (files.length > lugar) setError(`Podés subir hasta ${max} fotos. Se agregaron las primeras ${lugar}.`);
@@ -210,7 +221,13 @@ function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (pre
     for (const f of lista) {
       try {
         const { src } = await comprimirFoto(f);
-        setFotos((prev) => (prev.length < max ? [...prev, { src }] : prev));
+        const revision = await revisarFoto(src);
+        if (revision.apta === false) {
+          setRechazadas((r) => [...r, `"${f.name}": ${revision.motivo}`]);
+        } else {
+          if (revision.apta === "sin_revisar") onSinRevisar();
+          setFotos((prev) => (prev.length < max ? [...prev, { src }] : prev));
+        }
       } catch {
         setError("Alguna foto no se pudo leer. Probá con otra.");
       }
@@ -232,7 +249,7 @@ function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (pre
       <h2 className="text-xl font-extrabold">Fotos del auto</h2>
       <p className="mt-1 text-muted">Hasta {max}. La primera es la portada. Se achican solas para que carguen rápido.</p>
       <input ref={input} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => (agregar(e.target.files), (e.target.value = ""))} aria-label="Elegir fotos" />
-      <button type="button" onClick={() => input.current?.click()} disabled={fotos.length >= max} className="mt-4 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand/40 bg-brand-light/40 font-bold text-brand disabled:opacity-50">
+      <button type="button" onPointerDown={precargarDetector} onClick={() => input.current?.click()} disabled={fotos.length >= max} className="mt-4 flex min-h-28 w-full flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-brand/40 bg-brand-light/40 font-bold text-brand disabled:opacity-50">
         <CameraIcon className="size-8" />
         {fotos.length ? "Agregar más fotos" : "Elegir fotos o sacar con la cámara"}
         <span className="text-sm font-semibold text-muted">
@@ -243,6 +260,17 @@ function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (pre
         <p role="alert" className="mt-2 text-sm font-semibold text-danger">
           {error}
         </p>
+      )}
+      {rechazadas.length > 0 && (
+        <div role="alert" className="mt-2 rounded-xl bg-danger/10 p-3 text-sm text-danger">
+          <p className="font-bold">{rechazadas.length === 1 ? "Esta foto no se puede publicar" : "Estas fotos no se pueden publicar"}</p>
+          <ul className="mt-1 list-disc pl-5">
+            {rechazadas.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+          <p className="mt-1">Subí solo fotos del auto. Las publicaciones que no respetan las reglas se borran y la cuenta se bloquea.</p>
+        </div>
       )}
       {(fotos.length > 0 || procesando > 0) && (
         <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -275,7 +303,7 @@ function PasoFotos({ fotos, setFotos, max }: { fotos: Foto[]; setFotos: (f: (pre
           ))}
           {Array.from({ length: procesando }, (_, i) => (
             <li key={`p${i}`} className="grid aspect-[4/3] animate-pulse place-items-center rounded-xl bg-soft text-sm font-semibold text-muted">
-              Optimizando…
+              Revisando…
             </li>
           ))}
         </ul>
@@ -371,6 +399,20 @@ function PasoAuto({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) {
 
 /* ---------- Paso 3: precio y detalles ---------- */
 
+/** Avisa mientras escribe si el texto va a mandar el aviso a revisión. */
+function AvisoTexto({ texto }: { texto: string }) {
+  const motivos = revisarTexto(texto);
+  if (!motivos.length) return <span id="aviso-texto" hidden />;
+  const contacto = motivos.some((m) => m !== "palabras");
+  return (
+    <p id="aviso-texto" role="status" className="mt-2 rounded-xl bg-warn-bg p-3 text-sm text-warn">
+      <strong>{motivos.map((m) => textoMotivo[m]).join(" · ")}.</strong>{" "}
+      {contacto ? "No hace falta: los compradores te escriben con el botón de WhatsApp. " : ""}
+      Si lo dejás, el aviso pasa por revisión antes de publicarse.
+    </p>
+  );
+}
+
 function PasoPrecio({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) {
   return (
     <div className="space-y-5">
@@ -409,8 +451,9 @@ function PasoPrecio({ d, set }: { d: Datos; set: (c: Partial<Datos>) => void }) 
       <div>
         <label className="block">
           <span className="font-bold">Descripción (opcional)</span>
-          <textarea className="field mt-2" rows={4} maxLength={1500} value={d.descripcion} onChange={(e) => set({ descripcion: e.target.value })} placeholder="Contá lo que hace especial a este auto" />
+          <textarea className="field mt-2" rows={4} maxLength={1500} value={d.descripcion} onChange={(e) => set({ descripcion: e.target.value })} placeholder="Contá lo que hace especial a este auto" aria-describedby="aviso-texto" />
         </label>
+        <AvisoTexto texto={`${d.version} ${d.descripcion}`} />
         <p className="mt-2 text-sm text-muted">Tocá para sumar:</p>
         <div className="mt-1 flex flex-wrap gap-2">
           {frasesDescripcion.map((f) => (
@@ -488,9 +531,25 @@ export function CarForm({ inicial, duplicar = false, publicador }: { inicial?: V
     if (f.length) return setFaltan(f);
     irA(paso + 1);
   };
-  const guardar = async (estado: Vehiculo["estado"]) => {
+  /**
+   * Motivos para que un aviso de particular pase por el administrador antes de publicarse.
+   * Las concesionarias están verificadas y publican directo.
+   */
+  const motivosRevision = () => {
+    if (publicador.tipo !== "particular") return [];
+    const v = aVehiculo(d, publicador);
+    return [
+      ...(publicador.cuentaAprobada ? [] : ["Primer aviso de la cuenta"]),
+      ...(d.fotosSinRevisar ? ["Fotos sin revisar automáticamente"] : []),
+      ...revisarTexto(`${d.version} ${d.descripcion}`).map((m) => textoMotivo[m]),
+      ...revisarNumeros(v),
+    ];
+  };
+  const guardar = async (destino: Vehiculo["estado"]) => {
     setGuardando(true);
-    const v = aVehiculo(d, publicador, editando ? inicial : undefined, estado);
+    const motivos = destino === "publicado" ? motivosRevision() : [];
+    const estado = motivos.length ? "revision" : destino;
+    const v = { ...aVehiculo(d, publicador, editando ? inicial : undefined, estado), motivosRevision: motivos.length ? motivos : undefined, motivoRechazo: undefined };
     await guardarLocal(v);
     await borrarBorrador(claveBorrador);
     setGuardando(false);
@@ -555,7 +614,7 @@ export function CarForm({ inicial, duplicar = false, publicador }: { inicial?: V
       </div>
 
       <div className="mt-5 rounded-2xl border border-line bg-surface p-4 sm:p-6">
-        {paso === 0 && <PasoFotos max={maxFotos} fotos={d.fotos} setFotos={(fn) => setD((prev) => ({ ...prev, fotos: fn(prev.fotos) }))} />}
+        {paso === 0 && <PasoFotos max={maxFotos} fotos={d.fotos} setFotos={(fn) => setD((prev) => ({ ...prev, fotos: fn(prev.fotos) }))} onSinRevisar={() => set({ fotosSinRevisar: true })} />}
         {paso === 1 && <PasoAuto d={d} set={set} />}
         {paso === 2 && <PasoPrecio d={d} set={set} />}
         {paso === 3 && (
@@ -612,7 +671,7 @@ export function CarForm({ inicial, duplicar = false, publicador }: { inicial?: V
                 Guardar borrador
               </button>
             )}
-            <button type="button" disabled={guardando || sinLugar} onClick={() => guardar(editando ? inicial!.estado : "publicado")} className="btn btn-brand flex-1 disabled:opacity-50">
+            <button type="button" disabled={guardando || sinLugar} onClick={() => guardar(editando && !["revision", "rechazado", "borrador"].includes(inicial!.estado) ? inicial!.estado : "publicado")} className="btn btn-brand flex-1 disabled:opacity-50">
               <CheckIcon className="size-5" /> {editando ? "Guardar cambios" : "Publicar"}
             </button>
           </>
@@ -626,12 +685,21 @@ function Listo({ v, editando, publicador }: { v: Vehiculo; editando: boolean; pu
   const origen = useOrigen();
   const r = rutas(publicador);
   const publicado = v.estado === "publicado";
+  const enRevision = v.estado === "revision";
   return (
     <div className="mx-auto max-w-lg text-center">
-      <span className="mx-auto grid size-16 place-items-center rounded-full bg-ok-bg text-ok">
-        <CheckIcon className="size-9" />
+      <span className={`mx-auto grid size-16 place-items-center rounded-full ${enRevision ? "bg-brand-light text-brand" : "bg-ok-bg text-ok"}`}>
+        {enRevision ? <ClockIcon className="size-9" /> : <CheckIcon className="size-9" />}
       </span>
-      <h1 className="mt-4 text-2xl font-extrabold">{editando ? "Cambios guardados" : publicado ? "¡Listo! Tu auto ya está publicado" : "Guardado como borrador"}</h1>
+      <h1 className="mt-4 text-2xl font-extrabold">
+        {enRevision ? "Tu aviso está en revisión" : editando ? "Cambios guardados" : publicado ? "¡Listo! Tu auto ya está publicado" : "Guardado como borrador"}
+      </h1>
+      {enRevision && (
+        <div className="mt-3 rounded-xl bg-soft p-3 text-left text-sm">
+          <p>Lo revisamos antes de publicarlo para cuidar a los compradores. Vas a verlo como publicado en Mis avisos apenas lo aprobemos.</p>
+          <p className="mt-2 font-semibold">Motivo: {v.motivosRevision?.join(" · ")}</p>
+        </div>
+      )}
       <p className="mt-1 text-muted">
         {v.marca} {v.modelo} {v.anio}
       </p>

@@ -3,7 +3,8 @@ export type Tipo = "auto" | "camioneta" | "suv" | "utilitario";
 export type Condicion = "0km" | "usado";
 export type Combustible = "nafta" | "diesel" | "gnc" | "nafta_gnc" | "hibrido" | "electrico";
 export type Caja = "manual" | "automatica";
-export type EstadoVehiculo = "borrador" | "publicado" | "reservado" | "pausado" | "vendido";
+/** `revision`: espera que el administrador lo apruebe; `rechazado`: no se publicó (ver motivo). */
+export type EstadoVehiculo = "borrador" | "revision" | "rechazado" | "publicado" | "reservado" | "pausado" | "vendido";
 /** Silueta usada en las ilustraciones de la demo. */
 export type Carroceria = "sedan" | "hatch" | "pickup" | "suv" | "furgon";
 
@@ -109,6 +110,10 @@ export type Vehiculo = {
   vence?: string;
   /** Particular con la mejora "Aviso completo" (12 fotos y 90 días). */
   completo?: boolean;
+  /** Por qué quedó en revisión (primer aviso, foto dudosa, teléfono en el texto…). */
+  motivosRevision?: string[];
+  /** Por qué el administrador lo rechazó. */
+  motivoRechazo?: string;
   fotos: Foto[];
   /** Cargado desde el panel en este teléfono (demo). */
   local?: boolean;

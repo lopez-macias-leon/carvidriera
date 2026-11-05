@@ -55,6 +55,7 @@ export function Footer() {
             <li><Link href="/contacto" className="hover:text-brand hover:underline">Contacto</Link></li>
             <li><Link href="/terminos" className="hover:text-brand hover:underline">Términos y condiciones</Link></li>
             <li><Link href="/privacidad" className="hover:text-brand hover:underline">Política de privacidad</Link></li>
+            <li><Link href="/admin" className="hover:text-brand hover:underline">Administración (demo)</Link></li>
           </ul>
         </div>
       </div>

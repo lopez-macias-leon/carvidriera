@@ -147,7 +147,7 @@ export function Ficha({
       </details>
 
       <div className="mt-4">
-        <ReportDialog codigo={v.codigo} />
+        <ReportDialog codigo={v.codigo} titulo={titulo} />
       </div>
 
       {otros.map((lista, i) =>

@@ -9,6 +9,7 @@ import { guardarLocal } from "@/lib/demo-store";
 import { eventosLocales } from "@/lib/eventos";
 import { estaDestacado } from "@/lib/filtros";
 import { formatKm, formatPrecio, tituloVehiculo } from "@/lib/format";
+import { useCuenta } from "@/lib/moderacion-demo";
 import { cuentaParaTope, diasRestantes, PARTICULAR_DEMO, renovar, topeAlcanzado, useAvisosParticular, vencido } from "@/lib/mi-cuenta";
 import type { EstadoVehiculo, Vehiculo } from "@/lib/types";
 
@@ -20,14 +21,16 @@ function Estado({ v }: { v: Vehiculo }) {
     publicado: ["Publicado", "bg-ok-bg text-ok"],
     reservado: ["Reservado", "bg-warn-bg text-warn"],
     pausado: ["Pausado", "bg-soft text-muted"],
+    revision: ["En revisión", "bg-brand-light text-brand"],
+    rechazado: ["Rechazado", "bg-danger/10 text-danger"],
     borrador: ["Borrador", "bg-soft text-muted"],
     vendido: ["Vendido", "bg-ink text-white"],
   };
   const [label, clase] = textos[v.estado];
-  return <span className={`rounded-md px-2 py-0.5 text-xs font-bold ${clase}`}>{label}</span>;
+  return <span className={`shrink-0 whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-bold ${clase}`}>{label}</span>;
 }
 
-function Aviso({ v, sinLugar }: { v: Vehiculo; sinLugar: boolean }) {
+function Aviso({ v, sinLugar, bloqueada }: { v: Vehiculo; sinLugar: boolean; bloqueada: boolean }) {
   const ev = eventosLocales()[v.codigo];
   const dias = diasRestantes(v);
   const cambiar = (estado: EstadoVehiculo) => guardarLocal({ ...v, estado });
@@ -57,7 +60,17 @@ function Aviso({ v, sinLugar }: { v: Vehiculo; sinLugar: boolean }) {
           </p>
         </div>
       </div>
-      {activo && (
+      {v.estado === "revision" && (
+        <p className="mt-2 rounded-xl bg-brand-light/50 p-2.5 text-xs">
+          Lo estamos revisando antes de publicarlo. Motivo: {v.motivosRevision?.join(" · ") ?? "revisión de rutina"}.
+        </p>
+      )}
+      {v.estado === "rechazado" && (
+        <p className="mt-2 rounded-xl bg-danger/10 p-2.5 text-xs text-danger">
+          No se publicó: {v.motivoRechazo}. Corregilo y volvé a enviarlo.
+        </p>
+      )}
+      {activo && v.estado !== "revision" && (
         <p className="mt-2 text-xs text-muted">
           {estaDestacado(v) && v.destacadoHasta ? <span className="font-bold text-gold">Destacado hasta el {fmtFecha(v.destacadoHasta)} · </span> : null}
           {dias !== null && `Vence en ${dias} días`}
@@ -65,7 +78,7 @@ function Aviso({ v, sinLugar }: { v: Vehiculo; sinLugar: boolean }) {
         </p>
       )}
       <div className="mt-3 flex flex-wrap gap-2 border-t border-line pt-3">
-        {activo && <MejorasDialog v={v} />}
+        {activo && v.estado !== "revision" && !bloqueada && <MejorasDialog v={v} />}
         {(vencido(v) || (dias !== null && dias <= 10)) && v.estado !== "vendido" && (
           <button type="button" onClick={() => renovar(v)} className="btn btn-brand min-h-10 px-3 text-sm">
             Renovar 60 días
@@ -81,19 +94,22 @@ function Aviso({ v, sinLugar }: { v: Vehiculo; sinLugar: boolean }) {
             Pausar
           </button>
         )}
-        {(v.estado === "pausado" || v.estado === "borrador" || v.estado === "reservado") && (
+        {/* Un borrador nunca se revisó: se termina desde el formulario, que decide si pasa por revisión. */}
+        {(v.estado === "pausado" || v.estado === "reservado") && !bloqueada && (
           <button type="button" disabled={v.estado !== "reservado" && sinLugar} onClick={() => cambiar("publicado")} className="btn btn-ghost min-h-10 px-3 text-sm disabled:opacity-50">
-            {v.estado === "reservado" ? "Quitar reserva" : "Publicar"}
+            {v.estado === "reservado" ? "Quitar reserva" : "Volver a publicar"}
           </button>
         )}
-        {v.estado !== "vendido" && v.estado !== "borrador" && (
+        {!["vendido", "borrador", "revision", "rechazado"].includes(v.estado) && (
           <button type="button" onClick={() => cambiar("vendido")} className="btn btn-ghost min-h-10 px-3 text-sm">
             Lo vendí
           </button>
         )}
-        <Link href={`/mi-cuenta/editar?codigo=${v.codigo}`} className="btn btn-ghost min-h-10 px-3 text-sm">
-          Editar
-        </Link>
+        {!bloqueada && (
+          <Link href={`/mi-cuenta/editar?codigo=${v.codigo}`} className={`btn min-h-10 px-3 text-sm ${v.estado === "rechazado" || v.estado === "borrador" ? "btn-brand" : "btn-ghost"}`}>
+            {v.estado === "rechazado" ? "Corregir y volver a enviar" : v.estado === "borrador" ? "Terminar y publicar" : "Editar"}
+          </Link>
+        )}
       </div>
     </li>
   );
@@ -101,7 +117,8 @@ function Aviso({ v, sinLugar }: { v: Vehiculo; sinLugar: boolean }) {
 
 export default function MiCuentaPage() {
   const avisos = useAvisosParticular();
-  if (!avisos) return <p className="py-16 text-center text-muted">Cargando…</p>;
+  const cuenta = useCuenta(PARTICULAR_DEMO.id);
+  if (!avisos || !cuenta) return <p className="py-16 text-center text-muted">Cargando…</p>;
   const activos = avisos.filter((v) => cuentaParaTope(v) && !vencido(v)).length;
   const sinLugar = topeAlcanzado(avisos.filter((v) => !vencido(v)));
 
@@ -118,15 +135,20 @@ export default function MiCuentaPage() {
         </div>
       </div>
 
+      {cuenta.bloqueada && (
+        <p role="alert" className="mt-5 rounded-2xl bg-danger/10 p-4 text-sm text-danger">
+          <strong>Tu cuenta está bloqueada</strong> porque se publicó contenido que no respeta las reglas del portal. No podés publicar nuevos avisos.
+        </p>
+      )}
       <section className="mt-5 rounded-2xl border border-line bg-surface p-4" aria-labelledby="cupo">
         <div className="flex items-center justify-between gap-3">
           <div>
             <h2 id="cupo" className="font-bold">
-              {activos} de {TOPE_PARTICULAR} autos publicados
+              Usaste {activos} de {TOPE_PARTICULAR} lugares
             </h2>
-            <p className="text-sm text-muted">Publicar es gratis. Los avisos duran 60 días y se renuevan con un toque.</p>
+            <p className="text-sm text-muted">Cuentan los autos publicados y los que están en revisión. Publicar es gratis; los avisos duran 60 días y se renuevan con un toque.</p>
           </div>
-          {sinLugar ? (
+          {cuenta.bloqueada ? null : sinLugar ? (
             <span className="shrink-0 text-right text-sm font-semibold text-warn">Llegaste al máximo</span>
           ) : (
             <Link href="/mi-cuenta/publicar" className="btn btn-brand shrink-0">
@@ -145,7 +167,7 @@ export default function MiCuentaPage() {
       {avisos.length ? (
         <ul className="mt-5 space-y-3">
           {avisos.map((v) => (
-            <Aviso key={v.codigo} v={v} sinLugar={sinLugar} />
+            <Aviso key={v.codigo} v={v} sinLugar={sinLugar} bloqueada={cuenta.bloqueada} />
           ))}
         </ul>
       ) : (

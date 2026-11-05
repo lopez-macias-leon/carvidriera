@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { registrarDenuncia } from "@/lib/moderacion-demo";
 import { FlagIcon } from "./icons";
 
 const MOTIVOS = [
+  ["fotos", "Fotos inapropiadas o que no son del auto"],
   ["vendido", "El auto ya se vendió"],
   ["precio_falso", "El precio no es real"],
   ["fotos_no_corresponden", "Las fotos no corresponden"],
@@ -11,8 +13,11 @@ const MOTIVOS = [
   ["otro", "Otro motivo"],
 ] as const;
 
-/** Denunciar un aviso. En producción guarda en la tabla `denuncias`; el contacto es opcional. */
-export function ReportDialog({ codigo }: { codigo: string }) {
+/**
+ * Denunciar un aviso. En producción guarda en la tabla `denuncias` y, con varias denuncias abiertas,
+ * la base de datos pausa el aviso hasta que lo revise el administrador. El contacto es opcional.
+ */
+export function ReportDialog({ codigo, titulo }: { codigo: string; titulo: string }) {
   const ref = useRef<HTMLDialogElement>(null);
   const [enviado, setEnviado] = useState(false);
   useEffect(() => {
@@ -41,10 +46,16 @@ export function ReportDialog({ codigo }: { codigo: string }) {
         ) : (
           <form
             className="p-5"
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              // Demo: no se guarda. Producción: insert en `denuncias` con el código del aviso.
-              void codigo;
+              const datos = new FormData(e.currentTarget);
+              const motivo = String(datos.get("motivo"));
+              await registrarDenuncia({
+                codigo,
+                titulo,
+                motivo: MOTIVOS.find(([v]) => v === motivo)?.[1] ?? motivo,
+                detalle: String(datos.get("detalle") ?? "").slice(0, 500),
+              });
               setEnviado(true);
             }}
           >

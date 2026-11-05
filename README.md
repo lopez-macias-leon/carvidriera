@@ -34,6 +34,13 @@ npm run build && npm start   # versión de producción
 - Destacar: elegir una mejora (destacado 7 días, subir al principio, aviso completo) y pagar con Mercado Pago, simulado en la demo.
 - Filtro "Concesionarias / Particulares" en el listado y ficha con datos del vendedor particular y consejos de seguridad.
 
+**Moderación** (ver [docs/MODERACION.md](docs/MODERACION.md))
+- El primer aviso de cada particular queda "En revisión" hasta que lo aprueba el administrador; después, los siguientes salen al instante.
+- Cada foto pasa por un detector de contenido sexual en el teléfono (NSFW.js), que se descarga solo al elegir fotos.
+- Teléfonos, links, insultos, precios o kilometrajes absurdos mandan el aviso a revisión; el formulario avisa mientras se escribe.
+- Denuncias con motivo "fotos inapropiadas"; con 3, el aviso sale del portal y vuelve a revisión.
+- Administración (`/admin`, demo sin login): aprobar, rechazar con motivo, bloquear cuentas y atender denuncias.
+
 **Mecánicos** (`/mecanicos`, `/mecanico/[slug]`, `/para-talleres`)
 - Talleres con filtros por especialidad y localidad, ficha con WhatsApp, horarios y cómo llegar.
 - En cada ficha de auto usado, talleres que hacen revisión precompra.
@@ -64,10 +71,12 @@ Prueba de punta a punta en tamaño celular (búsqueda, filtros, ficha, WhatsApp,
 ```bash
 npm run build && npx next start -p 3200
 npm run prueba        # en otra terminal; usa el Playwright instalado en el sistema
+npm run prueba:moderacion   # reglas de texto y números, sin navegador
 ```
 
 ## Documentos
 
+- [docs/MODERACION.md](docs/MODERACION.md): cómo se frenan las publicaciones troll y qué falta para producción.
 - [docs/MODELO-V2.md](docs/MODELO-V2.md): versión 2 con particulares, concesionarias y mecánicos, y cómo gana plata el portal.
 - [docs/PROPUESTA.md](docs/PROPUESTA.md): planificación completa (sitemap, arquitectura, modelo de datos, seguridad, cobros, métricas, SEO y etapas).
 - [docs/LEGALES-BORRADOR.md](docs/LEGALES-BORRADOR.md): términos, condiciones para agencias y privacidad (para revisión profesional).

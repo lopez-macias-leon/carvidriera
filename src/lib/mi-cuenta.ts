@@ -11,7 +11,8 @@ export const PARTICULAR_DEMO: Particular = { id: "p-demo", nombre: "Particular d
 const DIA = 86400000;
 const enDias = (dias: number, desde = Date.now()) => new Date(desde + dias * DIA).toISOString();
 
-export const cuentaParaTope = (v: Vehiculo) => v.estado === "publicado" || v.estado === "reservado";
+/** Los avisos en revisión también ocupan lugar: si no, se podría saltear el tope mandando muchos a revisar. */
+export const cuentaParaTope = (v: Vehiculo) => v.estado === "publicado" || v.estado === "reservado" || v.estado === "revision";
 
 /** Avisos del particular cargados en este teléfono. */
 export function useAvisosParticular() {

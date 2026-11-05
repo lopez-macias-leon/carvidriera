@@ -7,11 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "prueba": "node pruebas/demo.js"
+    "prueba": "node pruebas/demo.js",
+    "prueba:moderacion": "tsx pruebas/moderacion.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
+    "@tensorflow/tfjs": "^4.22.0",
+    "buffer": "^6.0.3",
     "next": "16.4.3",
+    "nsfwjs": "^4.4.0",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
     "react-dom": "19.3.0"
@@ -26,6 +30,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
     "tailwindcss": "^4",
+    "tsx": "^4.19.2",
     "typescript": "^5"
   }
 }

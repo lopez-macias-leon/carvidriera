@@ -23,6 +23,8 @@ const ESTADO_TEXTO: Record<EstadoVehiculo, { label: string; clase: string }> = {
   publicado: { label: "Publicado", clase: "bg-ok-bg text-ok" },
   reservado: { label: "Reservado", clase: "bg-warn-bg text-warn" },
   pausado: { label: "Pausado", clase: "bg-soft text-muted" },
+  revision: { label: "En revisión", clase: "bg-brand-light text-brand" },
+  rechazado: { label: "Rechazado", clase: "bg-danger/10 text-danger" },
   borrador: { label: "Borrador", clase: "bg-soft text-muted" },
   vendido: { label: "Vendido", clase: "bg-ink text-white" },
 };

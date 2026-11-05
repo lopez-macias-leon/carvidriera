@@ -70,6 +70,9 @@ export async function borrarLocal(codigo: string) {
   window.dispatchEvent(new Event(EVENTO));
 }
 
+/** Avisa a las pantallas abiertas que cambió algo de la demo (avisos, cuentas, denuncias). */
+export const avisarCambio = () => window.dispatchEvent(new Event(EVENTO));
+
 export function alCambiar(cb: () => void) {
   window.addEventListener(EVENTO, cb);
   return () => window.removeEventListener(EVENTO, cb);

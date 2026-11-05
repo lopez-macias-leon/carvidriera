@@ -106,11 +106,19 @@ let page;
   await page.getByText("Vendedor particular").waitFor();
   ok(await visible(page.getByRole("heading", { name: "¿Lo querés revisar antes de comprar?" })), "Ficha de particular con talleres de revisión precompra");
 
-  const publicarParticular = async (marca, modelo) => {
+  const publicarParticular = async (marca, modelo, { foto = false, descripcion = "" } = {}) => {
     await page.goto(`${BASE}/mi-cuenta/publicar`);
+    // El borrador guardado se ofrece apenas termina de leerse: esperar el formulario o esa pregunta.
+    await page.getByRole("button", { name: /Empezar de nuevo|Seguir sin fotos/ }).first().waitFor();
     const empezar = page.getByRole("button", { name: "Empezar de nuevo" });
-    if (await empezar.isVisible().catch(() => false)) await empezar.click();
-    await page.getByRole("button", { name: /Seguir sin fotos/ }).click();
+    if (await empezar.isVisible()) await empezar.click();
+    if (foto) {
+      await page.locator('input[type="file"]').setInputFiles(path.join(__dirname, "foto-prueba.jpg"));
+      await page.getByText("Portada").waitFor({ timeout: 60000 }); // la primera vez descarga el detector
+      await page.getByRole("button", { name: "Siguiente" }).click();
+    } else {
+      await page.getByRole("button", { name: /Seguir sin fotos/ }).click();
+    }
     await page.getByRole("radio", { name: "Auto", exact: true }).click();
     await page.getByRole("radio", { name: marca }).click();
     await page.getByRole("radio", { name: modelo, exact: true }).click();
@@ -120,15 +128,38 @@ let page;
     await page.getByRole("radio", { name: "Manual" }).click();
     await page.getByRole("radio", { name: "Gris" }).click();
     await page.getByRole("button", { name: "Siguiente" }).click();
+    await page.getByRole("radio", { name: "Pesos $" }).click();
     await page.getByRole("textbox", { name: /^Precio/ }).fill("12000000");
+    let avisoTexto = false;
+    if (descripcion) {
+      await page.getByLabel("Descripción (opcional)").fill(descripcion);
+      avisoTexto = await visible(page.getByRole("status").filter({ hasText: "Teléfono en la descripción" }));
+    }
     await page.getByRole("button", { name: "Siguiente" }).click();
+    return avisoTexto;
   };
+  const admin = async () => {
+    await page.goto(`${BASE}/admin`);
+    await page.getByRole("heading", { name: "Moderación" }).waitFor();
+  };
+
+  // Moderación: el primer aviso de una cuenta nueva pasa por el administrador.
   await publicarParticular("Fiat", "Cronos");
   await page.getByRole("button", { name: "Publicar" }).click();
-  await page.getByRole("heading", { name: /Tu auto ya está publicado/ }).waitFor();
-  await publicarParticular("Chevrolet", "Onix");
+  await page.getByRole("heading", { name: "Tu aviso está en revisión" }).waitFor();
+  ok(await visible(page.getByText(/Motivo: Primer aviso de la cuenta/)), "Primer aviso de un particular queda en revisión");
+  await admin();
+  const enRevision = page.getByRole("listitem").filter({ hasText: "Fiat Cronos" });
+  await enRevision.getByRole("button", { name: "Aprobar", exact: true }).click();
+  await page.getByText("No hay avisos esperando revisión.").waitFor();
+  await page.goto(`${BASE}/mi-cuenta`);
+  ok(await visible(page.getByRole("listitem").filter({ hasText: "Fiat Cronos 2018" }).getByText("Publicado", { exact: true })), "El administrador lo aprueba y se publica");
+
+  // Con la cuenta aprobada, el segundo sale al instante. La foto pasa por el detector del teléfono.
+  await publicarParticular("Chevrolet", "Onix", { foto: true });
   await page.getByRole("button", { name: "Publicar" }).click();
-  await page.getByRole("heading", { name: /Tu auto ya está publicado/ }).waitFor();
+  await page.getByRole("heading", { name: /Tu auto ya está publicado|Tu aviso está en revisión/ }).waitFor();
+  ok(await visible(page.getByRole("heading", { name: /Tu auto ya está publicado/ })), "Cuenta aprobada: el segundo aviso, con foto revisada por el detector, se publica directo");
   ok(true, "Un particular publica 2 autos gratis");
   await publicarParticular("Ford", "Ka");
   ok(
@@ -137,7 +168,7 @@ let page;
   );
 
   await page.goto(`${BASE}/mi-cuenta`);
-  await page.getByText("2 de 2 autos publicados").waitFor();
+  await page.getByText("Usaste 2 de 2 lugares").waitFor();
   const avisoCronos = page.getByRole("listitem").filter({ hasText: "Fiat Cronos 2018" });
   await avisoCronos.getByRole("button", { name: "Destacar" }).click();
   await page.getByRole("button", { name: "Pagar con Mercado Pago" }).click();
@@ -146,8 +177,43 @@ let page;
   await page.getByRole("button", { name: "Listo" }).click();
   ok(await visible(avisoCronos.getByText(/Destacado hasta el/)), "Destacar un aviso con pago simulado");
   await avisoCronos.getByRole("button", { name: "Lo vendí" }).click();
-  await page.getByText("1 de 2 autos publicados").waitFor();
+  await page.getByText("Usaste 1 de 2 lugares").waitFor();
   ok(await visible(page.getByRole("link", { name: "Publicar" })), "Al marcar vendido se libera el lugar");
+
+  // Un teléfono en la descripción manda el aviso a revisión, y el administrador lo rechaza.
+  const avisoTelefono = await publicarParticular("Ford", "Ka", { descripcion: "Impecable, escribime al 383 4123456" });
+  ok(avisoTelefono, "Avisa mientras escribe que el teléfono manda el aviso a revisión");
+  await page.getByRole("button", { name: "Publicar" }).click();
+  await page.getByRole("heading", { name: "Tu aviso está en revisión" }).waitFor();
+  await admin();
+  const ka = page.getByRole("listitem").filter({ hasText: "Ford Ka" });
+  ok(await visible(ka.getByText("Teléfono en la descripción")), "El administrador ve por qué está en revisión");
+  await ka.getByRole("button", { name: "Rechazar" }).click();
+  await ka.getByLabel(/Motivo del rechazo/).selectOption("Teléfono o links en el texto");
+  await ka.getByRole("button", { name: "Rechazar aviso" }).click();
+  await page.getByText("No hay avisos esperando revisión.").waitFor();
+  await page.goto(`${BASE}/mi-cuenta`);
+  ok(await visible(page.getByText(/No se publicó: Teléfono o links en el texto/)), "Quien publicó ve el motivo del rechazo y puede corregirlo");
+
+  // Denuncias: con 3, un aviso sale del portal y vuelve a revisión.
+  const onix = page.getByRole("listitem").filter({ hasText: "Chevrolet Onix 2018" });
+  await onix.getByRole("link", { name: /Ver aviso de/ }).click();
+  for (let i = 0; i < 3; i++) {
+    await page.getByRole("button", { name: "Denunciar este aviso" }).click();
+    await page.getByRole("radio", { name: "Fotos inapropiadas o que no son del auto" }).check();
+    await page.getByRole("button", { name: "Enviar denuncia" }).click();
+    await page.getByText("Gracias por avisarnos").waitFor();
+    await page.getByRole("button", { name: "Cerrar" }).click();
+  }
+  await page.goto(`${BASE}/mi-cuenta`);
+  ok(await visible(onix.getByText("En revisión", { exact: true })), "Con 3 denuncias el aviso sale del portal y vuelve a revisión");
+
+  // Bloquear la cuenta: no puede publicar más.
+  await admin();
+  await page.getByRole("listitem").filter({ hasText: "Chevrolet Onix" }).getByRole("button", { name: "Bloquear cuenta" }).click();
+  await page.getByRole("button", { name: "Bloquear cuenta" }).last().click();
+  await page.goto(`${BASE}/mi-cuenta/publicar`);
+  ok(await visible(page.getByRole("heading", { name: "Tu cuenta está bloqueada" })), "Una cuenta bloqueada no puede publicar");
 
   // Mecánicos.
   await page.goto(`${BASE}/mecanicos`);
